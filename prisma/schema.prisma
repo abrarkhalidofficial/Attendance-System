@@ -6,3 +6,31 @@ datasource db {
   provider = "mongodb"
   url      = env("DATABASE_URL")
 }
+model User {
+  id       String   @id @map("_id")
+  name     String
+  email    String   @unique
+  createdAt DateTime @default(now())
+  password String
+  role     String   
+  attendance attendance[]
+  create   DateTime @default(now())
+  update   DateTime @updatedAt
+  unique   String   @unique
+
+
+ 
+  
+}
+
+model attendance {
+  id         String   @id @map("_id")
+  userId     String
+  date       DateTime @default(now())
+  status     String  
+  user       User     @relation(fields: [userId], references: [id])
+  create     DateTime @default(now())
+  update     DateTime @updatedAt
+  unique     String   @unique
+}
+
