@@ -110,21 +110,9 @@ export async function register(
 
   await prisma.user.create({
     data: {
-      id: "unique-id", // generate a unique id
       name: email.split("@")[0],
       email,
-      role: "user", // or any appropriate role
-      unique: "unique-value", // add a unique value
-      attendance: {
-        create: [
-          {
-            id: "1", // or generate a unique id
-            date: new Date(),
-            status: "present", // or any appropriate status
-            unique: "unique-value", // add a unique value
-          },
-        ],
-      },
+      role: "user", 
       password: hashedPassword,
     },
   });
