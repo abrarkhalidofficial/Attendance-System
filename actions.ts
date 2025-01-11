@@ -1,10 +1,12 @@
 "use server";
-
+import nodemailer from 'nodemailer';
 import { cookies } from "next/headers";
+
 
 import bcryptjs from "bcryptjs";
 import prisma from "./lib/prisma";
 import exp from "constants";
+
 
 export async function login(
   prevState: { status: string | null; error: string },
@@ -123,7 +125,15 @@ export async function register(
 
   return { ...prevState, status: "ok", error: "" };
 }
-
+function generateRandomPassword(length: number = 12): string {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let password = '';
+  for (let i = 0; i < length; i++) {
+    const randomIndex = Math.floor(Math.random() * characters.length);
+    password += characters[randomIndex];
+  }
+  return password;
+}
 
 export async function adduser(
   prevState: { status: string | null; error: string },
@@ -161,18 +171,85 @@ export async function adduser(
     };
   }
 
-  // Removed password and confirmPassword logic
-
-  const password = await bcryptjs.hash("defaultPassword", 10); // Use a default password or generate one
+  function generateToken(): string {
+    return crypto.randomBytes(32).toString('hex'); // Generates a secure random token
+  }
   
-  await prisma.user.create({
+  export async function adduser(
+    prevState: { status: string | null; error: string },
+    formData: FormData
+  ) {
+    const email = formData.get("email") as string;
+  
+    if (!email) {
+      return {
+        ...prevState,
+        status: "error",
+        error: "Email is required",
+      };
+    }
+  
+    if (!email.includes("@")) {
+      return {
+        ...prevState,
+        status: "error",
+        error: "Email is invalid",
+      };
+    }
+  
+    const user = await prisma.user.findUnique({
+      where: {
+        email,
+      },
+    });
+  
+    if (user) {
+      return {
+        ...prevState,
+        status: "error",
+        error: "Email is already in use",
+      };
+    }
+  
+    // Generate a unique token for registration
+    const registrationToken = generateToken();
+  
+    // Store the token in the database with an expiration time (optional)
+    await prisma.user.create({
       data: {
         name: email.split("@")[0],
         email,
-        role: "USER", 
-        password, // Include the password field
+        role: "USER",
+        registrationToken,
+        registrationTokenExpires: new Date(Date.now() + 3600000), // Token expires in 1 hour
       },
     });
-
-  return { ...prevState, status: "ok", error: "" };
-}
+  
+    // Nodemailer setup
+    const transporter = nodemailer.createTransport({
+      service: 'gmail', // Use your email provider
+      auth: {
+        user: 'abrarprince471@gmail.com', // Replace with your email
+        pass: 'dgbd tutm avnp gziv',   // Replace with your email password
+      },
+    });
+  
+    const mailOptions = {
+      from: 'your-email@gmail.com',  // Sender email
+      to: email,                     // Recipient email
+      subject: 'Complete Your Registration',
+      text: `Hi ${email.split('@')[0]},\n\nPlease complete your registration by setting your password.\n\nClick the link below to set your password:\n\nhttp://localhost:3000/register?token=${registrationToken}\n\nThis link is valid for one hour.\n\nBest regards,\nYour Service Team`,
+    };
+  
+    // Send the registration link with the token
+    try {
+      await transporter.sendMail(mailOptions);
+    } catch (error) {
+      return {
+        ...prevState,
+        status: "error",
+        error: "Error sending email: " + (error instanceof Error ? error.message : "Unknown error"),
+      };
+    }
+  
+    return { ...prevState, status: "ok", error: "" };
