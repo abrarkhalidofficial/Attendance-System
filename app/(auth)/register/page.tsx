@@ -8,8 +8,9 @@ export default async function RegisterServer() {
   const token = (await cookies()).get("token")?.value;
 
   if (token) {
-    return redirect("/chat");
+    return redirect("/admin");
   }
+
 
   return <Register />;
 }

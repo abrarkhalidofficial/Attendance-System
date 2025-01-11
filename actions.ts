@@ -45,7 +45,10 @@ export async function login(
     };
   }
 
-  (await cookies()).set("token", user.id, { path: "/" });
+  (await cookies()).set("token", JSON.stringify({
+    id: user.id,
+    role: user.role,
+  }), { path: "/" });
 
   return { ...prevState, status: "ok", error: "" };
 }
@@ -112,7 +115,7 @@ export async function register(
     data: {
       name: email.split("@")[0],
       email,
-      role: "user", 
+      role: "USER", 
       password: hashedPassword,
     },
   });

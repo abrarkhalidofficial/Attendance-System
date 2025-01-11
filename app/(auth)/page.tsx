@@ -3,22 +3,25 @@ import React from "react";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-export default async function Home({
-  searchParams,
-}: {
-  searchParams: Promise<{ invite: string | undefined }>;
-}) {
+export default async function Home() {
   const token = (await cookies()).get("token")?.value;
 
   if (token) {
-    const invite = (await searchParams).invite;
+    try {
+      const user = JSON.parse(token);
 
-    if (invite) {
-    
+      if (user.role === "admin") {
+        return redirect("/admin");
+      } else {
+        return redirect("/user");
+      }
+    } catch (error) {
+      console.error("Error parsing token:", error);
+      return redirect("/register");
     }
-
-    return redirect("/dashboard");
   }
+
+
 
   return <Login />;
 }

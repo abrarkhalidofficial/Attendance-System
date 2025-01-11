@@ -1,7 +1,6 @@
 "use client";
 import { useState } from 'react';
-import AllUsers from '../components/AllUsers';
-import styles from './Dashboard.module.css'; 
+import AllUsers from '../../components/AllUsers';
 
 export default function Dashboard() {
   const [content, setContent] = useState<keyof typeof contentMap>('dashboard');
@@ -19,10 +18,10 @@ export default function Dashboard() {
         <img
           src="https://via.placeholder.com/600x300"
           alt="User Management"
-          className={styles.img}
+          className="img"
         />
         <p>Manage users effectively by adding, editing, or removing users from your system.</p>
-        <button className={styles.sidebarBtn}>Add New User</button>
+        <button className="sidebarBtn" >Add New User</button>
       </div>
     ),
     viewattendance: (
@@ -31,11 +30,11 @@ export default function Dashboard() {
         <img
           src="https://via.placeholder.com/600x300"
           alt="Attendance"
-          className={styles.img}
+          className="img"
         />
         <p>Keep track of attendance records for your employees or students.</p>
-        <button className={styles.sidebarBtn}>View Records</button>
-      </div>
+        <button className="sidebarBtn ">View Records</button>
+      </div >
     ),
     leaves: (
       <div>
@@ -43,11 +42,11 @@ export default function Dashboard() {
         <img
           src="https://via.placeholder.com/600x300"
           alt="Leaves Management"
-          className={styles.img}
+          className="img"
         />
         <p>Approve or deny leave requests and manage leave policies.</p>
-        <button className={styles.sidebarBtn}>Review Leave Requests</button>
-      </div>
+        <button className="sidebarBtn">Review Leave Requests</button>
+      </div >
     ),
     changepassword: (
       <div>
@@ -55,42 +54,41 @@ export default function Dashboard() {
         <img
           src="https://via.placeholder.com/600x300"
           alt="Change Password"
-          className={styles.img}
+          className="img"
         />
         <p>Securely update your password to keep your account safe.</p>
-        <button className={styles.sidebarBtn}>Change Password</button>
-      </div>
+        <button className="sidebarBtn">Change Password</button>
+      </div >
     ),
   };
 
   return (
     <div style={{ display: 'flex', height: '100vh' }}>
-      {/* Sidebar */}
-      <div className={styles.sidebar}>
+      <div className="sidebar">
         <h2>Sidebar</h2>
         <nav>
-          <button onClick={() => setContent('dashboard')} className={styles.sidebarBtn}>
+          <button onClick={() => setContent('dashboard')} className="sidebarBtn">
             Dashboard
           </button>
-          <button onClick={() => setContent('user')} className={styles.sidebarBtn}>
+          <button onClick={() => setContent('user')} className="sidebarBtn">
             User
           </button>
-          <button onClick={() => setContent('viewattendance')} className={styles.sidebarBtn}>
+          <button onClick={() => setContent('viewattendance')} className="sidebarBtn">
             View Attendance
           </button>
-          <button onClick={() => setContent('leaves')} className={styles.sidebarBtn}>
+          <button onClick={() => setContent('leaves')} className="sidebarBtn">
             Leaves
           </button>
-          <button onClick={() => setContent('changepassword')} className={styles.sidebarBtn}>
+          <button onClick={() => setContent('changepassword')} className="sidebarBtn">
             Change Password
           </button>
-        </nav>
-      </div>
+        </nav >
+      </div >
 
       {/* Main Content */}
-      <main className={styles.mainContent}>
+      < main className="mainContent">
         {contentMap[content]}
-      </main>
-    </div>
+      </main >
+    </div >
   );
 }
