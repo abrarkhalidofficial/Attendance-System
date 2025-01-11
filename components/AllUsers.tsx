@@ -1,84 +1,94 @@
-export default function AllUsers() {
-    // Example users data
-    const users = [
-      { id: 1, email: 'email1@example.com', phone: '123456789', address: 'Address 1', name: 'User 1', role: 'Admin' },
-      { id: 2, email: 'email2@example.com', phone: '987654321', address: 'Address 2', name: 'User 2', role: 'Editor' },
-      { id: 3, email: 'email3@example.com', phone: '456789123', address: 'Address 3', name: 'User 3', role: 'Viewer' },
-      { id: 4, email: 'email4@example.com', phone: '789123456', address: 'Address 4', name: 'User 4', role: 'Admin' },
-      { id: 5, email: 'email5@example.com', phone: '321654987', address: 'Address 5', name: 'User 5', role: 'Editor' },
-    ];
-  
-    return (
-      <div style={{ padding: '20px', backgroundColor: '#f5e8ff', minHeight: '100vh' }}>
-        {/* Add User Button */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
-          <button
-            style={{
-              backgroundColor: '#ffd700',
-              color: '#000',
-              padding: '10px 20px',
-              borderRadius: '5px',
-              border: 'none',
-              cursor: 'pointer',
-              fontWeight: 'bold',
-            }}
-          >
-            Add User
-          </button>
-        </div>
-  
-        {/* Users List */}
-        <h1 style={{ marginBottom: '20px' }}>All Users</h1>
-        <div>
-          {users.map((user) => (
-            <div
-              key={user.id}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                marginBottom: '10px',
-                backgroundColor: '#ffd700',
-                padding: '10px',
-                borderRadius: '5px',
-              }}
-            >
-              {/* User Info */}
-              <div style={{ flexGrow: 1, color: '#000' }}>
-                {user.email} - {user.phone} - {user.address} - {user.name} - {user.role}
-              </div>
-  
-              {/* Edit Button */}
-              <button
-                style={{
-                  backgroundColor: '#2ecc71',
-                  color: 'white',
-                  padding: '8px 15px',
-                  borderRadius: '5px',
-                  border: 'none',
-                  cursor: 'pointer',
-                  marginRight: '10px',
-                }}
-              >
-                Edit
-              </button>
-  
-              {/* Delete Button */}
-              <button
-                style={{
-                  backgroundColor: '#e74c3c',
-                  color: 'white',
-                  padding: '8px 15px',
-                  borderRadius: '5px',
-                  border: 'none',
-                  cursor: 'pointer',
-                }}
-              >
-                Delete User
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
+import React from 'react'
+import { adduser } from '@/actions'
+
+export default function add() {
+  const [userData, setUserData] = React.useState({
+    email: '',
+    phone: '',
+    address: '',
+    name: '',
+    role: 'User',
+  })
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    setUserData({ ...userData, [e.target.name]: e.target.value })
   }
-  
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+
+    const formData = new FormData()
+    formData.append('email', userData.email)
+    formData.append('phone', userData.phone)
+    formData.append('address', userData.address)
+    formData.append('name', userData.name)
+    formData.append('role', userData.role)
+
+    const response = await adduser({ status: null, error: '' }, formData)
+
+    if (response.status === 'ok') {
+      alert('User added successfully!')
+    } else {
+      alert(response.error)
+    }
+  }
+
+  return (
+    <div>
+      <h1>Add New User</h1>
+      <form onSubmit={handleSubmit}>
+        <input
+          type="email"
+          name="email"
+          value={userData.email}
+          onChange={handleChange}
+          placeholder="Email"
+          required
+        />
+        <input
+          type="text"
+          name="phone"
+          value={userData.phone}
+          onChange={handleChange}
+          placeholder="Phone"
+          required
+        />
+        <input
+          type="text"
+          name="address"
+          value={userData.address}
+          onChange={handleChange}
+          placeholder="Address"
+          required
+        />
+        <input
+          type="text"
+          name="name"
+          value={userData.name}
+          onChange={handleChange}
+          placeholder="Name"
+          required
+        />
+
+
+        <select
+          name="role"
+          value={userData.role}
+          onChange={handleChange}
+          required
+        >
+          {
+            ['User', 'Admin'].map((role) => (
+              <option key={role} value={role}>{role}</option>
+            ))
+          }
+          {/* Add other roles as needed */}
+        </select>
+
+        <button type="submit">Add User</button>
+      </form>
+    </div>
+  )
+}
+
+

@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 
 import bcryptjs from "bcryptjs";
 import prisma from "./lib/prisma";
+import exp from "constants";
 
 export async function login(
   prevState: { status: string | null; error: string },
@@ -119,6 +120,59 @@ export async function register(
       password: hashedPassword,
     },
   });
+
+  return { ...prevState, status: "ok", error: "" };
+}
+
+
+export async function adduser(
+  prevState: { status: string | null; error: string },
+  formData: FormData
+) {
+  const email = formData.get("email") as string;
+
+  if (!email) {
+    return {
+      ...prevState,
+      status: "error",
+      error: "Email is required",
+    };
+  }
+
+  if (!email.includes("@")) {
+    return {
+      ...prevState,
+      status: "error",
+      error: "Email is invalid",
+    };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: {
+      email,
+    },
+  });
+
+  if (user) {
+    return {
+      ...prevState,
+      status: "error",
+      error: "Email is already in use",
+    };
+  }
+
+  // Removed password and confirmPassword logic
+
+  const password = await bcryptjs.hash("defaultPassword", 10); // Use a default password or generate one
+  
+  await prisma.user.create({
+      data: {
+        name: email.split("@")[0],
+        email,
+        role: "USER", 
+        password, // Include the password field
+      },
+    });
 
   return { ...prevState, status: "ok", error: "" };
 }
