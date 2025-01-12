@@ -1,136 +1,96 @@
-import React, { useState } from "react";
-import jsQR from "jsqr";  // Import jsQR library
-import { handleLogin, handleLogout } from "@/actions";
+import React, { useEffect, useState } from "react";
+import { getAttendanceDetails } from "@/actions"; // Import the function
+import { useRouter } from "next/router";
 
-const UserAttendancePage = () => {
-    const [message, setMessage] = useState("");
-    const [scannedId, setScannedId] = useState<string | null>(null);
-    const [imageUrl, setImageUrl] = useState<string | null>(null);
+interface AttendanceRecord {
+    loginTime: string;
+    logoutTime: string | null;
+    status: string;
+}
 
-    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                if (reader.result && typeof reader.result === "string") {
-                    const image = new Image();
-                    image.src = reader.result;
-                    image.onload = () => {
-                        const canvas = document.createElement("canvas");
-                        const ctx = canvas.getContext("2d");
-                        if (ctx) {
-                            canvas.width = image.width;
-                            canvas.height = image.height;
-                            ctx.drawImage(image, 0, 0, image.width, image.height);
+interface UserAttendanceProps {
+    userId: string;
+}
 
-                            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                            const qrCode = jsQR(imageData.data, canvas.width, canvas.height);
+const UserAttendance: React.FC<UserAttendanceProps> = ({ userId }) => {
+    const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
+    const [totalLoginTime, setTotalLoginTime] = useState<string>("0.00");
+    const [error, setError] = useState<string | null>(null);
+    const [loading, setLoading] = useState<boolean>(false);
 
-                            if (qrCode) {
-                                setScannedId(qrCode.data);
-                                handleScan(qrCode.data);
-                            } else {
-                                setMessage("No QR code found in the image.");
-                            }
-                        }
-                    };
+    useEffect(() => {
+        const fetchAttendance = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const response = await getAttendanceDetails(userId);
+
+                if (response.status === 'ok') {
+                    setAttendanceRecords(
+                        (response.attendanceRecords || []).map((record: any) => ({
+                            ...record,
+                            loginTime: record.loginTime.toISOString(),
+                            logoutTime: record.logoutTime ? record.logoutTime.toISOString() : null,
+                        }))
+                    );
+                    setTotalLoginTime(response.totalLoginTime || "0.00");
+                } else {
+                    setError(response.error || 'Unknown error');
                 }
-            };
-            reader.readAsDataURL(file);
+            } catch (err) {
+                setError('Failed to fetch attendance details');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        if (userId) {
+            fetchAttendance();
         }
-    };
+    }, [userId]);
 
-    const handleScan = async (data: string | null) => {
-        if (data) {
-            setScannedId(data);
+    if (loading) {
+        return <div>Loading...</div>;
+    }
 
-            const formData = new FormData();
-            formData.append("id", data);
-
-            const result = await handleLogin(formData);
-            setMessage(result.message || result.error || "An unknown error occurred");
-        }
-    };
-
-    const logout = async () => {
-        const formData = new FormData();
-        if (scannedId) {
-            formData.append("id", scannedId);
-        }
-
-        const result = await handleLogout(formData);
-        setMessage(result.message || result.error || "An unknown error occurred");
-    };
+    if (error) {
+        return <div style={{ color: 'red' }}>{error}</div>;
+    }
 
     return (
-        <div
-            style={{
-                fontFamily: 'Arial, sans-serif',
-                padding: '20px',
-                backgroundColor: '#f4f4f4',
-                height: '100vh',
-                overflow: 'auto',
-                textAlign: 'center',
-            }}
-        >
-            <h1 style={{ fontSize: '2.5rem', color: '#333', marginBottom: '20px' }}>
-                User Attendance (QR Code Upload)
-            </h1>
+        <div style={{ padding: 20, maxWidth: 600, margin: "auto" }}>
+            <h2>Your Attendance</h2>
 
-            <input
-                type="file"
-                accept="image/*"
-                onChange={handleFileUpload}
-                style={{
-                    padding: '10px',
-                    marginBottom: '20px',
-                    fontSize: '1rem',
-                    border: '1px solid #ddd',
-                    borderRadius: '5px',
-                }}
-            />
+            <div style={{ marginBottom: 20 }}>
+                <h3>Total Login Time Today: {totalLoginTime} hours</h3>
+            </div>
 
-            {imageUrl && (
-                <img
-                    src={imageUrl}
-                    alt="QR Code Preview"
-                    style={{
-                        width: '200px',
-                        height: 'auto',
-                        margin: '20px 0',
-                        borderRadius: '5px',
-                    }}
-                />
-            )}
-
-            <button
-                onClick={logout}
-                disabled={!scannedId}
-                style={{
-                    backgroundColor: '#4CAF50',
-                    color: '#fff',
-                    padding: '10px 20px',
-                    border: 'none',
-                    borderRadius: '5px',
-                    cursor: 'pointer',
-                    marginTop: '20px',
-                    opacity: !scannedId ? 0.5 : 1,
-                }}
-            >
-                Logout
-            </button>
-
-            <p
-                style={{
-                    color: '#ff5733',
-                    fontWeight: 'bold',
-                    marginTop: '20px',
-                }}
-            >
-                {message}
-            </p>
+            <table style={{ width: "100%", borderCollapse: "collapse" }}>
+                <thead>
+                    <tr>
+                        <th style={{ padding: "8px", border: "1px solid #ddd", textAlign: "left" }}>Login Time</th>
+                        <th style={{ padding: "8px", border: "1px solid #ddd", textAlign: "left" }}>Logout Time</th>
+                        <th style={{ padding: "8px", border: "1px solid #ddd", textAlign: "left" }}>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {attendanceRecords.map((record, index) => (
+                        <tr key={index}>
+                            <td style={{ padding: "8px", border: "1px solid #ddd" }}>
+                                {new Date(record.loginTime).toLocaleString()}
+                            </td>
+                            <td style={{ padding: "8px", border: "1px solid #ddd" }}>
+                                {record.logoutTime ? new Date(record.logoutTime).toLocaleString() : "Not logged out"}
+                            </td>
+                            <td style={{ padding: "8px", border: "1px solid #ddd" }}>
+                                {record.status}
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
         </div>
     );
 };
 
-export default UserAttendancePage;
+export default UserAttendance;

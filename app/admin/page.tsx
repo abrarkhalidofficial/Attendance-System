@@ -3,8 +3,8 @@ import { useState } from 'react';
 import AllUsers from '@/components/AllUsers';
 import UserList from '@/components/UserList';
 import Logout from '@/components/Logout';
-import AdminDashboard from '@/components/AdminDashboard';
 import AdminLeaveRequestsPage from '@/components/Adminleave';
+import AdminAttendance from '@/components/AdminAttendance';
 
 export default function Dashboard() {
   const [content, setContent] = useState<keyof typeof contentMap>('dashboard');
@@ -23,7 +23,7 @@ export default function Dashboard() {
     ),
     viewattendance: (
       <div>
-        <AdminDashboard />
+        <AdminAttendance />
       </div >
     ),
     leaves: (

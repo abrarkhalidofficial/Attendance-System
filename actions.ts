@@ -404,6 +404,25 @@ export async function deleteUser(
 
   return { ...prevState, status: 'ok', error: '' };
 }
+function calculateLeaveDays(startDate: Date, endDate: Date): number {
+  return (endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24) + 1;
+}
+
+async function checkLeaveLimit(userId: string): Promise<boolean> {
+  const currentYear = new Date().getFullYear();
+
+  const leavesTaken = await prisma.leaveRequest.count({
+    where: {
+      userId,
+      createdAt: {
+        gte: new Date(`${currentYear}-01-01`),
+        lt: new Date(`${currentYear + 1}-01-01`),
+      },
+    },
+  });
+
+  return leavesTaken >= 20;
+}
 
 // Update user email
 export async function updateUser(
@@ -541,23 +560,4 @@ export async function getAttendanceDetails(userId: string) {
 
 
 
-function calculateLeaveDays(startDate: Date, endDate: Date): number {
-  return (endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24) + 1;
-}
-
-async function checkLeaveLimit(userId: string): Promise<boolean> {
-  const currentYear = new Date().getFullYear();
-
-  const leavesTaken = await prisma.leaveRequest.count({
-    where: {
-      userId,
-      createdAt: {
-        gte: new Date(`${currentYear}-01-01`),
-        lt: new Date(`${currentYear + 1}-01-01`),
-      },
-    },
-  });
-
-  return leavesTaken >= 20;
-}
 
