@@ -8,6 +8,8 @@ const LeaveRequestPage: React.FC = () => {
     const [reason, setReason] = useState('');
     const [message, setMessage] = useState('');
     const [leaveRequests, setLeaveRequests] = useState<any[]>([]);
+    const [filteredRequests, setFilteredRequests] = useState<any[]>([]);
+    const [filter, setFilter] = useState<'ALL' | 'APPROVED' | 'REJECTED' | 'PENDING'>('ALL');
 
     useEffect(() => {
         const fetchLeaveRequests = async () => {
@@ -15,6 +17,7 @@ const LeaveRequestPage: React.FC = () => {
             if (result.status === 'ok') {
                 if (result.leaveRequests) {
                     setLeaveRequests(result.leaveRequests);
+                    setFilteredRequests(result.leaveRequests); // Initialize with all leave requests
                 }
             }
         };
@@ -38,10 +41,36 @@ const LeaveRequestPage: React.FC = () => {
             setReason('');
             // Re-fetch leave requests
             const res = await getLeaveRequests();
-            if (res.status === 'ok' && res.leaveRequests) setLeaveRequests(res.leaveRequests);
+            if (res.status === 'ok' && res.leaveRequests) {
+                setLeaveRequests(res.leaveRequests);
+                applyFilter(filter, res.leaveRequests); // Apply current filter after fetching new requests
+            }
         } else {
             setMessage(result.error || 'An error occurred');
         }
+    };
+
+    const applyFilter = (filter: 'ALL' | 'APPROVED' | 'REJECTED' | 'PENDING', requests: any[]) => {
+        switch (filter) {
+            case 'APPROVED':
+                setFilteredRequests(requests.filter(request => request.status === 'APPROVED'));
+                break;
+            case 'REJECTED':
+                setFilteredRequests(requests.filter(request => request.status === 'REJECTED'));
+                break;
+            case 'PENDING':
+                setFilteredRequests(requests.filter(request => request.status === 'PENDING'));
+                break;
+            case 'ALL':
+            default:
+                setFilteredRequests(requests);
+                break;
+        }
+    };
+
+    const handleFilterChange = (newFilter: 'ALL' | 'APPROVED' | 'REJECTED' | 'PENDING') => {
+        setFilter(newFilter);
+        applyFilter(newFilter, leaveRequests); // Apply the selected filter
     };
 
     // Function to format Date objects to a readable string
@@ -80,7 +109,7 @@ const LeaveRequestPage: React.FC = () => {
                     style={{
                         padding: '10px',
                         margin: '10px',
-                        width: '250px',
+                        width: '100%',
                         fontSize: '1rem',
                         borderRadius: '5px',
                         border: '1px solid #ddd',
@@ -94,7 +123,7 @@ const LeaveRequestPage: React.FC = () => {
                     style={{
                         padding: '10px',
                         margin: '10px',
-                        width: '250px',
+                        width: '100%',
                         fontSize: '1rem',
                         borderRadius: '5px',
                         border: '1px solid #ddd',
@@ -108,7 +137,7 @@ const LeaveRequestPage: React.FC = () => {
                     style={{
                         padding: '10px',
                         margin: '10px',
-                        width: '250px',
+                        width: '100%',
                         fontSize: '1rem',
                         borderRadius: '5px',
                         border: '1px solid #ddd',
@@ -122,7 +151,7 @@ const LeaveRequestPage: React.FC = () => {
                     style={{
                         padding: '10px',
                         margin: '10px',
-                        width: '250px',
+                        width: '100%',
                         fontSize: '1rem',
                         borderRadius: '5px',
                         border: '1px solid #ddd',
@@ -152,8 +181,68 @@ const LeaveRequestPage: React.FC = () => {
             )}
 
             <h2 style={{ fontSize: '2rem', color: '#333', marginTop: '30px' }}>Your Leave Requests</h2>
+
+            {/* Filter Buttons */}
+            <div style={{ marginBottom: '20px' }}>
+                <button
+                    onClick={() => handleFilterChange('ALL')}
+                    style={{
+                        backgroundColor: '#2196F3',
+                        color: '#fff',
+                        padding: '10px 20px',
+                        border: 'none',
+                        borderRadius: '5px',
+                        cursor: 'pointer',
+                        marginRight: '10px',
+                    }}
+                >
+                    All
+                </button>
+                <button
+                    onClick={() => handleFilterChange('APPROVED')}
+                    style={{
+                        backgroundColor: '#4CAF50',
+                        color: '#fff',
+                        padding: '10px 20px',
+                        border: 'none',
+                        borderRadius: '5px',
+                        cursor: 'pointer',
+                        marginRight: '10px',
+                    }}
+                >
+                    Approved
+                </button>
+                <button
+                    onClick={() => handleFilterChange('REJECTED')}
+                    style={{
+                        backgroundColor: '#f44336',
+                        color: '#fff',
+                        padding: '10px 20px',
+                        border: 'none',
+                        borderRadius: '5px',
+                        cursor: 'pointer',
+                        marginRight: '10px',
+                    }}
+                >
+                    Rejected
+                </button>
+                <button
+                    onClick={() => handleFilterChange('PENDING')}
+                    style={{
+                        backgroundColor: '#FF9800',
+                        color: '#fff',
+                        padding: '10px 20px',
+                        border: 'none',
+                        borderRadius: '5px',
+                        cursor: 'pointer',
+                    }}
+                >
+                    Pending
+                </button>
+            </div>
+
             <ul style={{ listStyleType: 'none', padding: 0 }}>
-                {leaveRequests.map((request) => (
+                {filteredRequests.map((request) => (
                     <li
                         key={request.id}
                         style={{
@@ -165,13 +254,19 @@ const LeaveRequestPage: React.FC = () => {
                         }}
                     >
                         <p style={{ fontSize: '1.1rem', color: '#555' }}>
-                            Leave from {formatDate(request.startDate)} to {formatDate(request.endDate)}
+                            <strong>Name:</strong> {request.userId} {/* Assuming userId is the name */}
                             <br />
-                            Status: {request.status}
+                            <strong>Leave from:</strong> {formatDate(request.startDate)} to {formatDate(request.endDate)}
+                            <br />
+                            <strong>Status:</strong> {request.status}
+                            <br />
+                            <strong>Reason:</strong> {request.reason}
                         </p>
                     </li>
                 ))}
             </ul>
+
+
         </div>
     );
 };
