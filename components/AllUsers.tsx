@@ -17,13 +17,13 @@ export default function Adduser() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-
     const formData = new FormData()
     formData.append('email', userData.email)
     formData.append('phone', userData.phone)
     formData.append('address', userData.address)
     formData.append('name', userData.name)
     formData.append('role', userData.role)
+
 
     const response = await adduser({ status: null, error: '' }, formData)
 
@@ -90,12 +90,24 @@ export default function Adduser() {
           {/* Add other roles as needed */}
         </select>
 
-        <button type="submit" style={{ width: '100%', padding: '12px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', fontSize: '16px' }}>
+        <button type="submit" disabled={!userData.email || !userData.phone || !userData.address || !userData.name || !userData.role}
+          style={
+            {
+              padding: '10px',
+              margin: '10px 0',
+              width: '100%',
+              borderRadius: '4px',
+              border: 'none',
+              backgroundColor: '#007bff',
+              color: '#fff',
+              cursor: 'pointer'
+            }}
+        >
           Add User
         </button>
       </form>
       <UserList />
-    </div>
+    </div >
 
   )
 }

@@ -13,23 +13,38 @@ enum Role {
 }
 
 model User {
-  id                       String       @id @default(cuid()) @map("_id")
+  id                       String         @id @default(cuid()) @map("_id")
   name                     String
-  email                    String       @unique
+  email                    String         @unique
   password                 String
-  role                     Role         @default(USER)
-  createdAt                DateTime     @default(now())
-  updatedAt                DateTime     @updatedAt
+  role                     Role           @default(USER)
+  createdAt                DateTime       @default(now())
+  updatedAt                DateTime       @updatedAt
   registrationToken        String?
   registrationTokenExpires DateTime?
   attendance               Attendance[]
+  leaveRequest             LeaveRequest[]
 }
 
 model Attendance {
+  id         String    @id @default(cuid()) @map("_id")
+  status     String
+  user       User      @relation(fields: [userId], references: [id])
+  userId     String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  loginTime  DateTime  @default(now())
+  logoutTime DateTime?
+}
+
+model LeaveRequest {
   id        String   @id @default(cuid()) @map("_id")
-  status    String
-  user      User     @relation(fields: [userId], references: [id])
   userId    String
+  startDate DateTime
+  endDate   DateTime
+  reason    String
+  status    String   @default("PENDING") // Ensure the status field is defined here
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  User      User     @relation(fields: [userId], references: [id])
 }

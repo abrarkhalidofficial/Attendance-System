@@ -3,6 +3,8 @@ import { useState } from 'react';
 import AllUsers from '@/components/AllUsers';
 import UserList from '@/components/UserList';
 import Logout from '@/components/Logout';
+import AdminDashboard from '@/components/AdminDashboard';
+import AdminLeaveRequestsPage from '@/components/Adminleave';
 
 export default function Dashboard() {
   const [content, setContent] = useState<keyof typeof contentMap>('dashboard');
@@ -21,26 +23,12 @@ export default function Dashboard() {
     ),
     viewattendance: (
       <div>
-        <h1>View Attendance</h1>
-        <img
-          src="https://via.placeholder.com/600x300"
-          alt="Attendance"
-          className="img"
-        />
-        <p>Keep track of attendance records for your employees or students.</p>
-        <button className="sidebarBtn ">View Records</button>
+        <AdminDashboard />
       </div >
     ),
     leaves: (
       <div>
-        <h1>Manage Leaves</h1>
-        <img
-          src="https://via.placeholder.com/600x300"
-          alt="Leaves Management"
-          className="img"
-        />
-        <p>Approve or deny leave requests and manage leave policies.</p>
-        <button className="sidebarBtn">Review Leave Requests</button>
+        <AdminLeaveRequestsPage />
       </div >
     ),
     changepassword: (

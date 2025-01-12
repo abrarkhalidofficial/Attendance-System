@@ -1,6 +1,7 @@
 "use client";
 import { useState } from 'react';
-import AllUsers from '../../components/AllUsers';
+import UserAttendance from '../../components/UserAttendance';
+import LeaveRequestPage from '@/components/LeaveRequest';
 
 export default function Dashboard() {
   const [content, setContent] = useState<keyof typeof contentMap>('dashboard');
@@ -9,7 +10,7 @@ export default function Dashboard() {
   const contentMap = {
     dashboard: (
       <div>
-        <AllUsers />
+        <UserAttendance />
       </div>
     ),
     user: (
@@ -38,14 +39,7 @@ export default function Dashboard() {
     ),
     leaves: (
       <div>
-        <h1>Manage Leaves</h1>
-        <img
-          src="https://via.placeholder.com/600x300"
-          alt="Leaves Management"
-          className="img"
-        />
-        <p>Approve or deny leave requests and manage leave policies.</p>
-        <button className="sidebarBtn">Review Leave Requests</button>
+        <LeaveRequestPage />
       </div >
     ),
     changepassword: (
@@ -86,7 +80,10 @@ export default function Dashboard() {
       </div >
 
       {/* Main Content */}
-      < main className="mainContent">
+      < main className="mainContent" style={{
+        width: '98%',
+        height: '100vh',
+      }}>
         {contentMap[content]}
       </main >
     </div >
