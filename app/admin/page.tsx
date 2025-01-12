@@ -5,6 +5,7 @@ import UserList from '@/components/UserList';
 import Logout from '@/components/Logout';
 import AdminLeaveRequestsPage from '@/components/Adminleave';
 import AdminAttendance from '@/components/AdminAttendance';
+import ChangePassword from '@/components/ChangePassword';
 
 export default function Dashboard() {
   const [content, setContent] = useState<keyof typeof contentMap>('dashboard');
@@ -32,16 +33,9 @@ export default function Dashboard() {
       </div >
     ),
     changepassword: (
-      <div>
-        <h1>Change Password</h1>
-        <img
-          src="https://via.placeholder.com/600x300"
-          alt="Change Password"
-          className="img"
-        />
-        <p>Securely update your password to keep your account safe.</p>
-        <button className="sidebarBtn">Change Password</button>
-      </div >
+      <>
+        <ChangePassword />
+      </>
     ),
   };
 

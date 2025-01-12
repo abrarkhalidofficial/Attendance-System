@@ -39,10 +39,9 @@ export default function UserList() {
     };
 
     const handleUpdate = async (userId: string) => {
-        // Example update data (you may want to prompt for user input)
         const updatedData = new FormData();
         updatedData.append('id', userId);
-        updatedData.append('email', 'updatedemail@example.com'); // Modify as needed
+        updatedData.append('email', 'updatedemail@example.com');
 
         const prevState = { status: null, error: '' };
         const result = await updateUser(prevState, updatedData);
@@ -60,9 +59,11 @@ export default function UserList() {
             <h2 style={{ textAlign: 'center', fontSize: '28px', marginBottom: '20px', fontWeight: 'bold', color: '#333' }}>All User List</h2>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px', fontSize: '18px', fontWeight: 'bold', color: '#333', borderBottom: '2px solid #ccc' }}>
+                <span>Id</span>
                 <span>Name</span>
-                <span>Email</span>
+                <span>Emial</span>
                 <span>Role</span>
+                <span>Action</span>
             </div>
 
             <ul style={{ listStyleType: 'none', padding: '0', margin: '0' }}>
@@ -78,8 +79,12 @@ export default function UserList() {
                         backgroundColor: '#fff',
                         transition: 'background-color 0.3s ease',
                     }}>
+                        <div style={{ flex: 1, color: '#555' }}>{user.id}</div>
                         <div style={{ flex: 1, fontWeight: '600' }}>{user.name}</div>
                         <div style={{ flex: 1, color: '#555' }}>{user.email}</div>
+
+
+
                         <div style={{
                             flex: 1,
                             textTransform: 'capitalize',
@@ -88,6 +93,7 @@ export default function UserList() {
                         }}>
                             {user.role}
                         </div>
+                        <br />
 
                         <div style={{ display: 'flex', gap: '10px' }}>
                             <button

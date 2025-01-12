@@ -222,7 +222,7 @@ export async function updatePassword(
   const id = formData.get('id') as string;
 
   if (!id) {
-    return { ...prevState, status: 'error', error: 'User ID is required' };
+    return { ...prevState, status: 'error', error: 'OLd password is Wrong' };
   }
 
   const user = await prisma.user.findUnique({ where: { id } });
@@ -557,7 +557,27 @@ export async function getAttendanceDetails(userId: string) {
   };
 }
 
+export async function markAttendance(userId: string, data: string) {
+  if (!userId) {
+    return { status: 'error', error: 'User ID is required' };
+  }
 
+  const activeSession = await prisma.attendance.findFirst({
+    where: { userId, logoutTime: null },
+  });
 
+  if (activeSession) {
+    return { status: 'error', error: 'User is already logged in' };
+  }
 
+  await prisma.attendance.create({
+    data: {
+      userId,
+      loginTime: new Date(),
+      status: 'PRESENT',
+    },
+  });
+
+  return getAttendanceDetails(userId);
+}
 

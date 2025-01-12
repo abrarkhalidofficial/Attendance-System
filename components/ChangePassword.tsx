@@ -76,13 +76,26 @@ const ChangePassword = () => {
     };
 
     return (
-        <div className="container">
-            <h1>Change Password</h1>
-            {status.status === 'success' && <p className="success">Password updated successfully!</p>}
-            {status.status === 'error' && <p className="error">{status.error}</p>}
-            <form onSubmit={handleSubmit}>
-                <div>
-                    <label htmlFor="currentPassword">Current Password</label>
+        <div style={{ padding: "20px", maxWidth: "400px", margin: "auto", fontFamily: "Arial, sans-serif" }}>
+            <h1 style={{ textAlign: "center", color: "#333" }}>Change Password</h1>
+            {status.status === "success" && (
+                <p style={{ color: "green", textAlign: "center", marginBottom: "20px" }}>
+                    Password updated successfully!
+                </p>
+            )}
+            {status.status === "error" && (
+                <p style={{ color: "red", textAlign: "center", marginBottom: "20px" }}>
+                    {status.error}
+                </p>
+            )}
+            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                    <label
+                        htmlFor="currentPassword"
+                        style={{ marginBottom: "5px", fontWeight: "bold", color: "#555" }}
+                    >
+                        Current Password
+                    </label>
                     <input
                         type="password"
                         id="currentPassword"
@@ -90,10 +103,21 @@ const ChangePassword = () => {
                         value={formData.currentPassword}
                         onChange={handleInputChange}
                         required
+                        style={{
+                            padding: "10px",
+                            border: "1px solid #ccc",
+                            borderRadius: "4px",
+                            fontSize: "14px",
+                        }}
                     />
                 </div>
-                <div>
-                    <label htmlFor="newPassword">New Password</label>
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                    <label
+                        htmlFor="newPassword"
+                        style={{ marginBottom: "5px", fontWeight: "bold", color: "#555" }}
+                    >
+                        New Password
+                    </label>
                     <input
                         type="password"
                         id="newPassword"
@@ -101,10 +125,21 @@ const ChangePassword = () => {
                         value={formData.newPassword}
                         onChange={handleInputChange}
                         required
+                        style={{
+                            padding: "10px",
+                            border: "1px solid #ccc",
+                            borderRadius: "4px",
+                            fontSize: "14px",
+                        }}
                     />
                 </div>
-                <div>
-                    <label htmlFor="confirmPassword">Confirm Password</label>
+                <div style={{ display: "flex", flexDirection: "column" }}>
+                    <label
+                        htmlFor="confirmPassword"
+                        style={{ marginBottom: "5px", fontWeight: "bold", color: "#555" }}
+                    >
+                        Confirm Password
+                    </label>
                     <input
                         type="password"
                         id="confirmPassword"
@@ -112,11 +147,32 @@ const ChangePassword = () => {
                         value={formData.confirmPassword}
                         onChange={handleInputChange}
                         required
+                        style={{
+                            padding: "10px",
+                            border: "1px solid #ccc",
+                            borderRadius: "4px",
+                            fontSize: "14px",
+                        }}
                     />
                 </div>
-                <button type="submit">Change Password</button>
+                <button
+                    type="submit"
+                    style={{
+                        padding: "10px",
+                        backgroundColor: "#007bff",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: "4px",
+                        fontSize: "16px",
+                        cursor: "pointer",
+                        textAlign: "center",
+                    }}
+                >
+                    Change Password
+                </button>
             </form>
         </div>
+
     );
 };
 
