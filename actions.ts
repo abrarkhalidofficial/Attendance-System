@@ -128,6 +128,141 @@ export async function register(
   return { ...prevState, status: "ok", error: "" };
 }
 
+export async function handleLeaveRequest(formData: FormData): Promise<{ status: string; error?: string; message?: string }> {
+  const userId = formData.get('userId') as string;
+  const startDate = new Date(formData.get('startDate') as string);
+  const endDate = new Date(formData.get('endDate') as string);
+  const reason = formData.get('reason') as string;
+
+  if (!userId || !startDate || !endDate || !reason) {
+    return { status: 'error', error: 'All fields are required' };
+  }
+
+  if (startDate > endDate) {
+    return { status: 'error', error: 'Start date must be before end date' };
+  }
+
+  const leaveDays = calculateLeaveDays(startDate, endDate);
+
+  if (leaveDays > 20) {
+    return { status: 'error', error: 'You cannot take more than 20 days off in a year' };
+  }
+
+  if (await checkLeaveLimit(userId)) {
+    return { status: 'error', error: 'You have already taken 20 days off this year' };
+  }
+
+  await prisma.leaveRequest.create({
+    data: {
+      userId,
+      startDate,
+      endDate,
+      reason,
+    },
+  });
+
+  return { status: 'ok', message: 'Leave request submitted successfully' };
+}
+
+export async function getLeaveRequests(): Promise<{ status: string; error?: string; leaveRequests?: any[] }> {
+  const leaveRequests = await prisma.leaveRequest.findMany();
+
+  return { status: 'ok', leaveRequests };
+}
+
+export async function updateLeaveRequest(formData: FormData): Promise<{ status: string; error?: string; message?: string }> {
+  const id = formData.get('id') as string;
+  const status = formData.get('status') as string;
+
+  if (!id || !status) {
+    return { status: 'error', error: 'Leave request ID and status are required' };
+  }
+
+  if (status !== 'APPROVED' && status !== 'REJECTED') {
+    return { status: 'error', error: 'Invalid status' };
+  }
+
+  await prisma.leaveRequest.update({
+    where: { id },
+    data: { status: status as 'APPROVED' | 'REJECTED' } as any,
+  });
+
+  return { status: 'ok', message: 'Leave request updated successfully' };
+}
+
+
+// check user login status and role and change password 
+export async function checkUser() {
+  const token = (await cookies()).get('token');
+
+  if (!token) {
+    return { loggedIn: false, role: null };
+  }
+
+  const { id, role } = JSON.parse(token.value);
+
+  return { loggedIn: true, role, id };
+}
+export async function changePassword()
+{
+  const token = (await cookies()).get('token');
+
+  if (!token) {
+    return { loggedIn: false, role: null };
+  }
+
+  const { id, role } = JSON.parse(token.value);
+
+  return { loggedIn: true, role, id };
+}
+export async function updatePassword(
+  prevState: { status: string | null; error: string },
+  formData: FormData
+) {
+  const id = formData.get('id') as string;
+
+  if (!id) {
+    return { ...prevState, status: 'error', error: 'User ID is required' };
+  }
+
+  const user = await prisma.user.findUnique({ where: { id } });
+
+  if (!user) {
+    return { ...prevState, status: 'error', error: 'User not found' };
+  }
+
+  const currentPassword = formData.get('currentPassword') as string;
+  const newPassword = formData.get('newPassword') as string;
+  const confirmPassword = formData.get('confirmPassword') as string;
+
+  if (!currentPassword || !newPassword || !confirmPassword) {
+    return { ...prevState, status: 'error', error: 'All fields are required' };
+  }
+
+  if (newPassword !== confirmPassword) {
+    return { ...prevState, status: 'error', error: 'Passwords do not match' };
+  }
+
+  const isPasswordValid = await bcryptjs.compare(currentPassword, user.password);
+
+  if (!isPasswordValid) {
+    return { ...prevState, status: 'error', error: 'Current password is incorrect' };
+  }
+
+  const hashedPassword = await bcryptjs.hash(newPassword, 10);
+
+  await prisma.user.update({
+    where: { id },
+    data: { password: hashedPassword },
+  });
+
+  return { ...prevState, status: 'ok', error: '' };
+}
+
+
+
+
+
 
 
 ////add user and qr 
@@ -190,8 +325,8 @@ export async function adduser(
 
   // Create registration URL with token
   const registrationUrl = `http://localhost:3000/register?token=${registrationToken}`;
-  let qrCodeImage: string | undefined = undefined;
 
+  let qrCodeImage: string;
   try {
     // Generate the QR code as a data URL
     qrCodeImage = await QRCode.toDataURL(registrationUrl);
@@ -405,14 +540,11 @@ export async function getAttendanceDetails(userId: string) {
 
 
 
-// leave request
 
-// Function to calculate the number of leave days
 function calculateLeaveDays(startDate: Date, endDate: Date): number {
   return (endDate.getTime() - startDate.getTime()) / (1000 * 3600 * 24) + 1;
 }
 
-// Function to check if the user has taken more than 20 leaves in a year
 async function checkLeaveLimit(userId: string): Promise<boolean> {
   const currentYear = new Date().getFullYear();
 
@@ -428,72 +560,4 @@ async function checkLeaveLimit(userId: string): Promise<boolean> {
 
   return leavesTaken >= 20;
 }
-
-
-// Function to handle leave request
-export async function handleLeaveRequest(formData: FormData): Promise<{ status: string; error?: string; message?: string }> {
-  const userId = formData.get('userId') as string;
-  const startDate = new Date(formData.get('startDate') as string);
-  const endDate = new Date(formData.get('endDate') as string);
-  const reason = formData.get('reason') as string;
-
-  if (!userId || !startDate || !endDate || !reason) {
-    return { status: 'error', error: 'All fields are required' };
-  }
-
-  if (startDate > endDate) {
-    return { status: 'error', error: 'Start date must be before end date' };
-  }
-
-  const leaveDays = calculateLeaveDays(startDate, endDate);
-
-  if (leaveDays > 20) {
-    return { status: 'error', error: 'You cannot take more than 20 days off in a year' };
-  }
-
-  if (await checkLeaveLimit(userId)) {
-    return { status: 'error', error: 'You have already taken 20 days off this year' };
-  }
-
-  await prisma.leaveRequest.create({
-    data: {
-      userId,
-      startDate,
-      endDate,
-      reason,
-      // status: 'PENDING', // or any default status
-    },
-  });
-
-  return { status: 'ok', message: 'Leave request submitted successfully' };
-}
-
-// Function to get all leave requests
-export async function getLeaveRequests(): Promise<{ status: string; error?: string; leaveRequests?: any[] }> {
-  const leaveRequests = await prisma.leaveRequest.findMany();
-
-  return { status: 'ok', leaveRequests };
-}
-
-// Function to approve or reject a leave request
-export async function updateLeaveRequest(formData: FormData): Promise<{ status: string; error?: string; message?: string }> {
-  const id = formData.get('id') as string;
-  const status = formData.get('status') as string;
-
-  if (!id || !status) {
-    return { status: 'error', error: 'Leave request ID and status are required' };
-  }
-
-  if (status !== 'APPROVED' && status !== 'REJECTED') {
-    return { status: 'error', error: 'Invalid status' };
-  }
-
-  await prisma.leaveRequest.update({
-    where: { id },
-    data: { status: status as 'APPROVED' | 'REJECTED' } as any,
-  });
-
-  return { status: 'ok', message: 'Leave request updated successfully' };
-}
-
 
