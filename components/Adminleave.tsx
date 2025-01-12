@@ -3,7 +3,9 @@ import { getLeaveRequests, updateLeaveRequest } from '@/actions';
 
 const AdminLeaveRequestsPage: React.FC = () => {
   const [leaveRequests, setLeaveRequests] = useState<any[]>([]);
+  const [filteredRequests, setFilteredRequests] = useState<any[]>([]);
   const [message, setMessage] = useState('');
+  const [filter, setFilter] = useState<'ALL' | 'APPROVED' | 'REJECTED' | 'PENDING'>('ALL');
 
   useEffect(() => {
     const fetchLeaveRequests = async () => {
@@ -11,6 +13,7 @@ const AdminLeaveRequestsPage: React.FC = () => {
       console.log(result);  // Log the result to check the response
       if (result.status === 'ok') {
         setLeaveRequests(result.leaveRequests || []);
+        setFilteredRequests(result.leaveRequests || []); // Set initial filtered data
       }
     };
     fetchLeaveRequests();
@@ -27,7 +30,10 @@ const AdminLeaveRequestsPage: React.FC = () => {
       setMessage('Leave request updated successfully');
       // Re-fetch leave requests after the update
       const res = await getLeaveRequests();
-      if (res.status === 'ok') setLeaveRequests(res.leaveRequests || []);
+      if (res.status === 'ok') {
+        setLeaveRequests(res.leaveRequests || []);
+        applyFilter(filter, res.leaveRequests || []);
+      }
     } else {
       setMessage(result.error || 'An error occurred');
     }
@@ -48,6 +54,31 @@ const AdminLeaveRequestsPage: React.FC = () => {
       default:
         return 'pending';
     }
+  };
+
+  // Function to filter leave requests based on status
+  const applyFilter = (filter: 'ALL' | 'APPROVED' | 'REJECTED' | 'PENDING', requests: any[]) => {
+    switch (filter) {
+      case 'APPROVED':
+        setFilteredRequests(requests.filter(request => request.status === 'APPROVED'));
+        break;
+      case 'REJECTED':
+        setFilteredRequests(requests.filter(request => request.status === 'REJECTED'));
+        break;
+      case 'PENDING':
+        setFilteredRequests(requests.filter(request => request.status === 'PENDING'));
+        break;
+      case 'ALL':
+      default:
+        setFilteredRequests(requests);
+        break;
+    }
+  };
+
+  // Function to handle filter button click
+  const handleFilterChange = (newFilter: 'ALL' | 'APPROVED' | 'REJECTED' | 'PENDING') => {
+    setFilter(newFilter);
+    applyFilter(newFilter, leaveRequests);
   };
 
   return (
@@ -73,8 +104,66 @@ const AdminLeaveRequestsPage: React.FC = () => {
         All Leave Requests
       </h2>
 
+      <div style={{ marginBottom: '20px' }}>
+        <button
+          onClick={() => handleFilterChange('ALL')}
+          style={{
+            backgroundColor: '#2196F3',
+            color: '#fff',
+            padding: '10px 20px',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            marginRight: '10px',
+          }}
+        >
+          All
+        </button>
+        <button
+          onClick={() => handleFilterChange('APPROVED')}
+          style={{
+            backgroundColor: '#4CAF50',
+            color: '#fff',
+            padding: '10px 20px',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            marginRight: '10px',
+          }}
+        >
+          Approved
+        </button>
+        <button
+          onClick={() => handleFilterChange('REJECTED')}
+          style={{
+            backgroundColor: '#f44336',
+            color: '#fff',
+            padding: '10px 20px',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+            marginRight: '10px',
+          }}
+        >
+          Rejected
+        </button>
+        <button
+          onClick={() => handleFilterChange('PENDING')}
+          style={{
+            backgroundColor: '#FF9800',
+            color: '#fff',
+            padding: '10px 20px',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: 'pointer',
+          }}
+        >
+          Pending
+        </button>
+      </div>
+
       <ul style={{ listStyleType: 'none', padding: 0 }}>
-        {leaveRequests.map((request) => (
+        {filteredRequests.map((request) => (
           <li
             key={request.id}
             style={{
@@ -128,7 +217,6 @@ const AdminLeaveRequestsPage: React.FC = () => {
         ))}
       </ul>
     </div>
-
   );
 };
 
