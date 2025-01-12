@@ -13,14 +13,16 @@ enum Role {
 }
 
 model User {
-  id         String       @id @default(cuid()) @map("_id")
-  name       String
-  email      String       @unique
-  password   String
-  role       Role         @default(USER)
-  createdAt  DateTime     @default(now())
-  updatedAt  DateTime     @updatedAt
-  attendance Attendance[]
+  id                       String       @id @default(cuid()) @map("_id")
+  name                     String
+  email                    String       @unique
+  password                 String
+  role                     Role         @default(USER)
+  createdAt                DateTime     @default(now())
+  updatedAt                DateTime     @updatedAt
+  registrationToken        String?
+  registrationTokenExpires DateTime?
+  attendance               Attendance[]
 }
 
 model Attendance {
