@@ -1,6 +1,8 @@
 "use client";
 import { useState } from 'react';
-import AllUsers from '../../components/AllUsers';
+import AllUsers from '@/components/AllUsers';
+import UserList from '@/components/UserList';
+import Logout from '@/components/Logout';
 
 export default function Dashboard() {
   const [content, setContent] = useState<keyof typeof contentMap>('dashboard');
@@ -15,16 +17,7 @@ export default function Dashboard() {
       </div>
     ),
     user: (
-      <div>
-        <h1>User Management</h1>
-        <img
-          src="https://via.placeholder.com/600x300"
-          alt="User Management"
-          className="img"
-        />
-        <p>Manage users effectively by adding, editing, or removing users from your system.</p>
-        <button className="sidebarBtn" >Add New User</button>
-      </div>
+      <UserList />
     ),
     viewattendance: (
       <div>
@@ -84,11 +77,14 @@ export default function Dashboard() {
           <button onClick={() => setContent('changepassword')} className="sidebarBtn">
             Change Password
           </button>
+          <Logout />
         </nav >
       </div >
 
       {/* Main Content */}
-      < main className="mainContent">
+      < main className="mainContent" style={{
+        width: '100%',
+      }}>
         {contentMap[content]}
       </main >
     </div >

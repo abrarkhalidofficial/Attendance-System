@@ -1,13 +1,14 @@
 import React from 'react'
 import { adduser } from '@/actions'
+import UserList from './UserList'
 
-export default function add() {
+export default function Adduser() {
   const [userData, setUserData] = React.useState({
     email: '',
     phone: '',
     address: '',
     name: '',
-    role: 'User',
+    role: ''
   })
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -34,9 +35,11 @@ export default function add() {
   }
 
   return (
-    <div>
-      <h1>Add New User</h1>
-      <form onSubmit={handleSubmit}>
+    <div style={{ padding: '20px', maxWidth: '100%', margin: 'auto', borderRadius: '8px' }}>
+      <h1 style={{ textAlign: 'center', fontSize: '24px', marginBottom: '20px' }}>Add New User</h1>
+      <form style={{
+        display: 'flex'
+      }} onSubmit={handleSubmit}>
         <input
           type="email"
           name="email"
@@ -44,6 +47,7 @@ export default function add() {
           onChange={handleChange}
           placeholder="Email"
           required
+          style={{ width: '100%', padding: '10px', margin: '10px 0', borderRadius: '4px', border: '1px solid #ccc' }}
         />
         <input
           type="text"
@@ -52,6 +56,7 @@ export default function add() {
           onChange={handleChange}
           placeholder="Phone"
           required
+          style={{ width: '100%', padding: '10px', margin: '10px 0', borderRadius: '4px', border: '1px solid #ccc' }}
         />
         <input
           type="text"
@@ -60,6 +65,7 @@ export default function add() {
           onChange={handleChange}
           placeholder="Address"
           required
+          style={{ width: '100%', padding: '10px', margin: '10px 0', borderRadius: '4px', border: '1px solid #ccc' }}
         />
         <input
           type="text"
@@ -68,26 +74,29 @@ export default function add() {
           onChange={handleChange}
           placeholder="Name"
           required
+          style={{ width: '100%', padding: '10px', margin: '10px 0', borderRadius: '4px', border: '1px solid #ccc' }}
         />
-
 
         <select
           name="role"
           value={userData.role}
           onChange={handleChange}
           required
+          style={{ width: '100%', padding: '10px', margin: '10px 0', borderRadius: '4px', border: '1px solid #ccc' }}
         >
-          {
-            ['User', 'Admin'].map((role) => (
-              <option key={role} value={role}>{role}</option>
-            ))
-          }
+          {['User', 'Admin'].map((role) => (
+            <option key={role} value={role}>{role}</option>
+          ))}
           {/* Add other roles as needed */}
         </select>
 
-        <button type="submit">Add User</button>
+        <button type="submit" style={{ width: '100%', padding: '12px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '4px', fontSize: '16px' }}>
+          Add User
+        </button>
       </form>
+      <UserList />
     </div>
+
   )
 }
 
