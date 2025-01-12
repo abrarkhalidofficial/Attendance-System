@@ -191,7 +191,6 @@ export async function updateLeaveRequest(formData: FormData): Promise<{ status: 
 }
 
 
-// check user login status and role and change password 
 export async function checkUser() {
   const token = (await cookies()).get('token');
 
@@ -264,10 +263,6 @@ export async function updatePassword(
 
 
 
-
-////add user and qr 
-
-// Function to generate a random password
 function generateRandomPassword(length: number = 12): string {
   const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+';
   let password = '';
@@ -277,12 +272,10 @@ function generateRandomPassword(length: number = 12): string {
   return password;
 }
 
-// Function to generate a token for registration
 function generateToken(): string {
   return crypto.randomBytes(20).toString('hex');
 }
 
-// Function to add a user
 export async function adduser(
   prevState: { status: string | null; error: string },
   formData: FormData
@@ -297,21 +290,17 @@ export async function adduser(
     return { ...prevState, status: 'error', error: 'Email is invalid' };
   }
 
-  // Check if the user already exists
   const user = await prisma.user.findUnique({ where: { email } });
 
   if (user) {
     return { ...prevState, status: 'error', error: 'Email is already in use' };
   }
 
-  // Generate a unique token for registration
   const registrationToken = generateToken();
 
-  // Generate a random password and hash it
   const password = generateRandomPassword();
-  const hashedPassword = await bcryptjs.hash(password, 10); // Hash the password
+  const hashedPassword = await bcryptjs.hash(password, 10); 
 
-  // Store the user with the registration token
   await prisma.user.create({
     data: {
       name: email.split('@')[0],
@@ -319,16 +308,14 @@ export async function adduser(
       role: 'USER',
       password: hashedPassword,
       registrationToken,
-      registrationTokenExpires: new Date(Date.now() + 3600000), // Token expires in 1 hour
+      registrationTokenExpires: new Date(Date.now() + 3600000),
     },
   });
 
-  // Create registration URL with token
   const registrationUrl = `http://localhost:3000/register?token=${registrationToken}`;
 
   let qrCodeImage: string;
   try {
-    // Generate the QR code as a data URL
     qrCodeImage = await QRCode.toDataURL(registrationUrl);
   } catch (error) {
     return {
@@ -338,12 +325,11 @@ export async function adduser(
     };
   }
 
-  // Nodemailer setup
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-      user: 'abrarprince471@gmail.com', // Replace with your email
-      pass: 'dgbd tutm avnp gziv', // Replace with your email password
+      user: 'abrarprince471@gmail.com', 
+      pass: 'dgbd tutm avnp gziv',
     },
   });
 
@@ -364,7 +350,6 @@ export async function adduser(
     `,
   };
 
-  // Send the registration email with the QR code
   try {
     await transporter.sendMail(mailOptions);
   } catch (error) {
@@ -378,12 +363,12 @@ export async function adduser(
   return { ...prevState, status: 'ok', error: '' };
 }
 
-// Handle logout
+
 export async function logout() {
   (await cookies()).delete({ name: 'token', path: '/' });
 }
 
-// Handle user deletion
+
 export async function deleteUser(
   prevState: { status: string | null; error: string },
   formData: FormData
@@ -424,7 +409,6 @@ async function checkLeaveLimit(userId: string): Promise<boolean> {
   return leavesTaken >= 20;
 }
 
-// Update user email
 export async function updateUser(
   prevState: { status: string | null; error: string },
   formData: FormData
@@ -455,12 +439,10 @@ export async function updateUser(
   return { ...prevState, status: 'ok', error: '' };
 }
 
-// List all users
 export async function getAllUsers() {
   return await prisma.user.findMany();
 }
 
-// Handle user login
 export async function handleLogin(formData: FormData) {
   const id = formData.get('id') as string;
 
@@ -493,7 +475,6 @@ export async function handleLogin(formData: FormData) {
   return { status: 'ok', message: 'User logged in successfully' };
 }
 
-// Handle user logout
 export async function handleLogout(formData: FormData): Promise<{ status: string; error?: string; message?: string }> {
   const id = formData.get('id') as string;
 

@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 import { QRCodeSVG } from 'qrcode.react';
 import { useRouter } from 'next/navigation';
 interface UserAttendanceProps {
-    userId: string; // Pass userId as prop or get from context or auth
+    userId: string;
 }
 
 const UserAttendance = ({ userId }: UserAttendanceProps) => {
@@ -14,10 +14,10 @@ const UserAttendance = ({ userId }: UserAttendanceProps) => {
     const [loginTime, setLoginTime] = useState<Date | null>(null);
     const [logoutTime, setLogoutTime] = useState<Date | null>(null);
     const [attendanceList, setAttendanceList] = useState<any[]>([]);
-    const [email, setEmail] = useState<string>('user@example.com'); // Example email
+    const [email, setEmail] = useState<string>('user@example.com');
     const router = useRouter();
 
-    // Fetch attendance data for the current day using @action
+
     useEffect(() => {
         const fetchAttendance = async () => {
             try {
@@ -31,7 +31,6 @@ const UserAttendance = ({ userId }: UserAttendanceProps) => {
         fetchAttendance();
     }, [userId]);
 
-    // Action to mark attendance login or logout
     const handleScanQR = async () => {
         const currentTime = new Date();
         try {
@@ -74,14 +73,13 @@ const UserAttendance = ({ userId }: UserAttendanceProps) => {
                 ))}
             </ul>
 
-            {/* QR Code Generation */}
+
             <h3>QR Code for User Email</h3>
             <QRCodeSVG value={email} size={256} />
         </div>
     );
 };
 
-// Action to fetch attendance records for the user on the current day
 const fetchAttendanceRecords = action(async (userId: string) => {
     const currentDate = new Date();
     const startOfDay = new Date(currentDate.setHours(0, 0, 0, 0));

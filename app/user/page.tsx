@@ -8,12 +8,11 @@ import Logout from '@/components/Logout';
 export default function Dashboard() {
   const [content, setContent] = useState<keyof typeof contentMap>('viewattendance');
 
-  // Content data for each section
   const contentMap = {
 
     viewattendance: (
       <div>
-        <UserAttendance />
+        <UserAttendance userId="someUserId" />
       </div >
     ),
     leaves: (
