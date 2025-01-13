@@ -3,7 +3,6 @@ import { useState, useEffect } from 'react';
 import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
-import { QRCodeSVG } from 'qrcode.react';
 import { useRouter } from 'next/navigation';
 interface UserAttendanceProps {
     userId: string;
@@ -74,8 +73,7 @@ const UserAttendance = ({ userId }: UserAttendanceProps) => {
             </ul>
 
 
-            <h3>QR Code for User Email</h3>
-            <QRCodeSVG value={email} size={256} />
+
         </div>
     );
 };
@@ -101,7 +99,6 @@ const fetchAttendanceRecords = action(async (userId: string) => {
     return attendance;
 });
 
-// Action to mark login attendance for the user
 const markLoginAttendance = action(async (userId: string, loginTime?: Date) => {
     await prisma.attendance.create({
         data: {
@@ -112,7 +109,6 @@ const markLoginAttendance = action(async (userId: string, loginTime?: Date) => {
     });
 });
 
-// Action to mark logout attendance for the user
 const markLogoutAttendance = action(async (userId: string, logoutTime: Date) => {
     const activeSession = await prisma.attendance.findFirst({
         where: {
@@ -140,5 +136,4 @@ function action<T>(fn: (...args: any[]) => Promise<T>): (...args: any[]) => Prom
         }
     };
 }
-// Removed duplicate function implementation
 

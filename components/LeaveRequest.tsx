@@ -39,11 +39,10 @@ const LeaveRequestPage: React.FC = () => {
             setStartDate('');
             setEndDate('');
             setReason('');
-            // Re-fetch leave requests
             const res = await getLeaveRequests();
             if (res.status === 'ok' && res.leaveRequests) {
                 setLeaveRequests(res.leaveRequests);
-                applyFilter(filter, res.leaveRequests); // Apply current filter after fetching new requests
+                applyFilter(filter, res.leaveRequests);
             }
         } else {
             setMessage(result.error || 'An error occurred');
@@ -70,10 +69,9 @@ const LeaveRequestPage: React.FC = () => {
 
     const handleFilterChange = (newFilter: 'ALL' | 'APPROVED' | 'REJECTED' | 'PENDING') => {
         setFilter(newFilter);
-        applyFilter(newFilter, leaveRequests); // Apply the selected filter
+        applyFilter(newFilter, leaveRequests);
     };
 
-    // Function to format Date objects to a readable string
     const formatDate = (date: Date) => {
         return new Date(date).toLocaleDateString();
     };

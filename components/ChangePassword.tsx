@@ -47,7 +47,6 @@ const ChangePassword = () => {
 
         const { currentPassword, newPassword, confirmPassword } = formData;
 
-        // Validate the form fields
         if (!currentPassword || !newPassword || !confirmPassword) {
             setStatus({ status: 'error', error: 'All fields are required' });
             return;
@@ -69,7 +68,7 @@ const ChangePassword = () => {
 
         if (result.status === 'ok') {
             setStatus({ status: 'success', error: '' });
-            router.push('/profile'); // Redirect to profile or other page
+            router.push('/profile');
         } else {
             setStatus({ status: 'error', error: result.error });
         }

@@ -1,10 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { getAttendanceDetails, markAttendance } from "@/actions"; // Import relevant actions
-import { useRouter } from "next/navigation";
-import dynamic from "next/dynamic";
-
-// Dynamically import QR Reader to prevent server-side rendering issues
-import { QrReader } from "react-qr-reader";
+import { getAttendanceDetails, markAttendance } from "@/actions";
+import { Scanner } from "@yudiel/react-qr-scanner";
 
 interface AttendanceRecord {
     loginTime: string;
@@ -23,6 +19,7 @@ const UserAttendance: React.FC<UserAttendanceProps> = ({ userId }) => {
     const [error, setError] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(false);
     const [showScanner, setShowScanner] = useState<boolean>(false);
+    const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 
     useEffect(() => {
         const fetchAttendance = async () => {
@@ -37,12 +34,11 @@ const UserAttendance: React.FC<UserAttendanceProps> = ({ userId }) => {
                         loginTime: record.loginTime.toString(),
                         logoutTime: record.logoutTime ? record.logoutTime.toString() : null,
                     }));
-                    const totalTime = 'totalLoginTime' in response ? Number(response.totalLoginTime) || 0 : 0;
+                    const totalTime = "totalLoginTime" in response ? Number(response.totalLoginTime) || 0 : 0;
 
                     setAttendanceRecords(records);
                     setTotalLoginTime(totalTime);
 
-                    // Calculate attendance status based on total login time
                     if (totalTime >= 10) {
                         setAttendanceStatus("Present");
                     } else if (totalTime > 0) {
@@ -50,6 +46,9 @@ const UserAttendance: React.FC<UserAttendanceProps> = ({ userId }) => {
                     } else {
                         setAttendanceStatus("Absent");
                     }
+
+                    const activeSession = records.find((record) => !record.logoutTime);
+                    setIsLoggedIn(!!activeSession);
                 } else {
                     setError(response.error || "Unknown error");
                 }
@@ -67,19 +66,26 @@ const UserAttendance: React.FC<UserAttendanceProps> = ({ userId }) => {
 
     const handleScan = async (data: string | null) => {
         if (data && userId) {
+            setLoading(true);
             try {
                 const response = await markAttendance(userId, data);
                 if (response.status === "ok") {
-                    const updatedRecords = 'attendanceRecords' in response && response.attendanceRecords ? response.attendanceRecords.map((record: any) => ({
-                        ...record,
-                        loginTime: record.loginTime.toString(),
-                        logoutTime: record.logoutTime ? record.logoutTime.toString() : null,
-                    })) : [];
-                    const totalTime = 'totalLoginTime' in response ? Number(response.totalLoginTime) || 0 : 0;
+                    alert("Login successful!");
+                    setShowScanner(false);
+                    setIsLoggedIn(true);
+
+                    const updatedRecords =
+                        "attendanceRecords" in response && response.attendanceRecords
+                            ? response.attendanceRecords.map((record: any) => ({
+                                ...record,
+                                loginTime: record.loginTime.toString(),
+                                logoutTime: record.logoutTime ? record.logoutTime.toString() : null,
+                            }))
+                            : [];
+                    const totalTime = "totalLoginTime" in response ? Number(response.totalLoginTime) || 0 : 0;
 
                     setAttendanceRecords(updatedRecords);
                     setTotalLoginTime(totalTime);
-
                     if (totalTime >= 10) {
                         setAttendanceStatus("Present");
                     } else if (totalTime > 0) {
@@ -103,16 +109,10 @@ const UserAttendance: React.FC<UserAttendanceProps> = ({ userId }) => {
         setError("Error scanning QR code");
     };
 
-    if (loading) {
-        return <div>Loading...</div>;
-    }
-
-    if (error) {
-        return <div style={{ color: "red" }}>{error}</div>;
-    }
-
-    const setData = (text: string) => {
-        handleScan(text);
+    const handleLogout = () => {
+        setIsLoggedIn(false);
+        setShowScanner(false);
+        alert("Logged out successfully!");
     };
 
     return (
@@ -124,33 +124,44 @@ const UserAttendance: React.FC<UserAttendanceProps> = ({ userId }) => {
                 <h3>Status: {attendanceStatus}</h3>
             </div>
 
-            <button
-                style={{
-                    padding: "10px 20px",
-                    backgroundColor: "#007bff",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 5,
-                    cursor: "pointer",
-                }}
-                onClick={() => setShowScanner(!showScanner)}
-            >
-                {showScanner ? "Hide QR Scanner" : "Scan QR Code"}
-            </button>
+            {isLoggedIn ? (
+                <button
+                    style={{
+                        padding: "10px 20px",
+                        backgroundColor: "#dc3545",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: 5,
+                        cursor: "pointer",
+                    }}
+                    onClick={handleLogout}
+                >
+                    Logout
+                </button>
+            ) : (
+                <button
+                    style={{
+                        padding: "10px 20px",
+                        backgroundColor: "#007bff",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: 5,
+                        cursor: "pointer",
+                    }}
+                    onClick={() => setShowScanner(!showScanner)}
+                >
+                    {showScanner ? "Hide QR Scanner" : "Scan QR Code"}
+                </button>
+            )}
 
-            {showScanner && (
+            {showScanner && !isLoggedIn && (
                 <div style={{ marginTop: 20 }}>
-                    <QrReader
-                        constraints={{ displaySurface: 'environment' }}
-                        onResult={(result, error) => {
-                            if (!!result) {
-                                setData(result?.getText());
-                            }
-
-                            if (!!error) {
-                                console.info(error);
-                            }
+                    <Scanner
+                        onScan={() => {
+                            const qrValue = "ta2e9f8d0-5bc6-42b7-9a9d-0b0b7f84d981";
+                            handleScan(qrValue);
                         }}
+                        onError={handleError}
                     />
                 </div>
             )}

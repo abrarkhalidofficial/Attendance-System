@@ -7,7 +7,6 @@ import bcryptjs from "bcryptjs";
 import prisma from "./lib/prisma";
 import exp from "constants";
 import crypto from "crypto";
-import QRCode from 'qrcode';
 
 
 export async function login(
@@ -275,7 +274,6 @@ function generateRandomPassword(length: number = 12): string {
 function generateToken(): string {
   return crypto.randomBytes(20).toString('hex');
 }
-
 export async function adduser(
   prevState: { status: string | null; error: string },
   formData: FormData
@@ -314,17 +312,6 @@ export async function adduser(
 
   const registrationUrl = `http://localhost:3000/register?token=${registrationToken}`;
 
-  let qrCodeImage: string;
-  try {
-    qrCodeImage = await QRCode.toDataURL(registrationUrl);
-  } catch (error) {
-    return {
-      ...prevState,
-      status: 'error',
-      error: 'Error generating QR code: ' + (error instanceof Error ? error.message : 'Unknown error'),
-    };
-  }
-
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -337,15 +324,13 @@ export async function adduser(
     from: 'your-email@gmail.com',
     to: email,
     subject: 'Complete Your Registration',
-    text: `Hi ${email.split('@')[0]},\n\nPlease complete your registration by setting your password.\n\nClick the link below to set your password:\n\n${registrationUrl}\n\nThis link is valid for one hour.\n\nOr scan the QR code below to complete your registration.\n\nBest regards,\nYour Service Team`,
+    text: `Hi ${email.split('@')[0]},\n\nPlease complete your registration by setting your password.\n\nClick the link below to set your password:\n\n${registrationUrl}\n\nThis link is valid for one hour.\n\nBest regards,\nYour Service Team`,
     html: `
       <p>Hi ${email.split('@')[0]},</p>
       <p>Please complete your registration by setting your password.</p>
       <p>Click the link below to set your password:</p>
       <p><a href="${registrationUrl}">${registrationUrl}</a></p>
       <p>This link is valid for one hour.</p>
-      <p>Or scan the QR code below to complete your registration:</p>
-      <img src="${qrCodeImage}" alt="QR Code for registration" />
       <p>Best regards,<br/>Your Service Team</p>
     `,
   };
@@ -362,6 +347,7 @@ export async function adduser(
 
   return { ...prevState, status: 'ok', error: '' };
 }
+
 
 
 export async function logout() {

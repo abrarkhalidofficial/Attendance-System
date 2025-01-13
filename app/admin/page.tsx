@@ -10,7 +10,6 @@ import ChangePassword from '@/components/ChangePassword';
 export default function Dashboard() {
   const [content, setContent] = useState<keyof typeof contentMap>('dashboard');
 
-  // Content data for each section
   const contentMap = {
     dashboard: (
       <div>

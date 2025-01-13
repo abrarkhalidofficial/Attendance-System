@@ -11,15 +11,15 @@ importers:
       '@prisma/client':
         specifier: ^6.2.1
         version: 6.2.1(prisma@6.2.1)
+      '@yudiel/react-qr-scanner':
+        specifier: ^2.1.0
+        version: 2.1.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       bcryptjs:
         specifier: ^2.4.3
         version: 2.4.3
       jotai:
         specifier: ^2.11.0
         version: 2.11.0(@types/react@19.0.4)(react@19.0.0)
-      jsqr:
-        specifier: ^1.4.0
-        version: 1.4.0
       next:
         specifier: 15.1.4
         version: 15.1.4(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -29,21 +29,12 @@ importers:
       nuqs:
         specifier: ^2.3.0
         version: 2.3.0(next@15.1.4(react-dom@19.0.0(react@19.0.0))(react@19.0.0))(react@19.0.0)
-      qrcode:
-        specifier: ^1.5.4
-        version: 1.5.4
-      qrcode.react:
-        specifier: ^4.2.0
-        version: 4.2.0(react@19.0.0)
       react:
         specifier: ^19.0.0
         version: 19.0.0
       react-dom:
         specifier: ^19.0.0
         version: 19.0.0(react@19.0.0)
-      react-qr-reader:
-        specifier: 3.0.0-beta-1
-        version: 3.0.0-beta-1(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
       swr:
         specifier: ^2.3.0
         version: 2.3.0(react@19.0.0)
@@ -57,9 +48,6 @@ importers:
       '@types/nodemailer':
         specifier: ^6.4.17
         version: 6.4.17
-      '@types/qrcode':
-        specifier: ^1.5.5
-        version: 1.5.5
       '@types/react':
         specifier: ^19.0.4
         version: 19.0.4
@@ -267,14 +255,17 @@ packages:
   '@types/bcryptjs@2.4.6':
     resolution: {integrity: sha512-9xlo6R2qDs5uixm0bcIqCeMCE6HiQsIyel9KQySStiyqNl2tnj2mP3DX1Nf56MD6KMenNNlBBsy3LJ7gUEQPXQ==}
 
+  '@types/dom-webcodecs@0.1.11':
+    resolution: {integrity: sha512-yPEZ3z7EohrmOxbk/QTAa0yonMFkNkjnVXqbGb7D4rMr+F1dGQ8ZUFxXkyLLJuiICPejZ0AZE9Rrk9wUCczx4A==}
+
+  '@types/emscripten@1.39.13':
+    resolution: {integrity: sha512-cFq+fO/isvhvmuP/+Sl4K4jtU6E23DoivtbO4r50e3odaxAiVdbfSYRDdJ4gCdxx+3aRjhphS5ZMwIH4hFy/Cw==}
+
   '@types/node@22.10.5':
     resolution: {integrity: sha512-F8Q+SeGimwOo86fiovQh8qiXfFEh2/ocYv7tU5pJ3EXMSSxk1Joj5wefpFK2fHTf/N6HKGSxIDBT9f3gCxXPkQ==}
 
   '@types/nodemailer@6.4.17':
     resolution: {integrity: sha512-I9CCaIp6DTldEg7vyUTZi8+9Vo0hi1/T8gv3C89yk1rSAAzoKQ8H8ki/jBYJSFoH/BisgLP8tkZMlQ91CIquww==}
-
-  '@types/qrcode@1.5.5':
-    resolution: {integrity: sha512-CdfBi/e3Qk+3Z/fXYShipBT13OJ2fDO2Q2w5CIP5anLTLIndQG9z6P1cnm+8zCWSpm5dnxMFd/uREtb0EXuQzg==}
 
   '@types/react-dom@19.0.2':
     resolution: {integrity: sha512-c1s+7TKFaDRRxr1TxccIX2u7sfCnc3RxkVyBIUA2lCpyqCF+QoAwQ/CBg7bsMdVwP120HEH143VQezKtef5nCg==}
@@ -284,25 +275,14 @@ packages:
   '@types/react@19.0.4':
     resolution: {integrity: sha512-3O4QisJDYr1uTUMZHA2YswiQZRq+Pd8D+GdVFYikTutYsTz+QZgWkAPnP7rx9txoI6EXKcPiluMqWPFV3tT9Wg==}
 
-  '@zxing/browser@0.0.7':
-    resolution: {integrity: sha512-AepzMgDnD6EjxewqmXpHJsi4S3Gw9ilZJLIbTf6fWuWySEcHBodnGu3p7FWlgq1Sd5QyfPhTum5z3CBkkhMVng==}
+  '@yudiel/react-qr-scanner@2.1.0':
+    resolution: {integrity: sha512-O3832Qk8YU+vnLO+tsJalfQcXRZ1pOB9l6WrI3OdwpxkQEzukpT48M6Hc2vUUe1rFE6qapQnV3RGRFNM0S7CHw==}
     peerDependencies:
-      '@zxing/library': ^0.18.3
+      react: ^17 || ^18 || ^19
+      react-dom: ^17 || ^18 || ^19
 
-  '@zxing/library@0.18.6':
-    resolution: {integrity: sha512-bulZ9JHoLFd9W36pi+7e7DnEYNJhljYjZ1UTsKPOoLMU3qtC+REHITeCRNx40zTRJZx18W5TBRXt5pq2Uopjsw==}
-    engines: {node: '>= 10.4.0'}
-
-  '@zxing/text-encoding@0.9.0':
-    resolution: {integrity: sha512-U/4aVJ2mxI0aDNI8Uq0wEhMgY+u4CNtEb0om3+y3+niDAsoTCOB33UF0sxpzqzdqXLqmvc+vZyAt4O8pPdfkwA==}
-
-  ansi-regex@5.0.1:
-    resolution: {integrity: sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==}
-    engines: {node: '>=8'}
-
-  ansi-styles@4.3.0:
-    resolution: {integrity: sha512-zbB9rCJAT1rbjiVDb2hqKFHNYLxgtk8NURxZ3IZwD3F6NtxbXZQCnnSi1Lkx+IDohdPlFp222wVALIheZJQSEg==}
-    engines: {node: '>=8'}
+  barcode-detector@2.3.1:
+    resolution: {integrity: sha512-D9KEtrquS1tmBZduxBZl8qublIKnRrFqD8TAHDYcLCyrHQBo+vitIxmjMJ61LvXjXyAMalOlO7q0Oh/9Rl2PbQ==}
 
   bcryptjs@2.4.3:
     resolution: {integrity: sha512-V/Hy/X9Vt7f3BbPJEi8BdVFMByHi+jNXrYkW3huaybV/kQ0KJg0Y6PkEMbn+zeT+i+SiKZ/HMqJGIIt4LZDqNQ==}
@@ -311,18 +291,11 @@ packages:
     resolution: {integrity: sha512-8SFQbg/0hQ9xy3UNTB0YEnsNBbWfhf7RtnzpL7TkBiTBRfrQ9Fxcnz7VJsleJpyp6rVLvXiuORqjlHi5q+PYuA==}
     engines: {node: '>=10.16.0'}
 
-  camelcase@5.3.1:
-    resolution: {integrity: sha512-L28STB170nwWS63UjtlEOE3dldQApaJXZkOI1uMFfzf3rRuPegHaHesyee+YxQ+W6SvRDQV6UrdOdRiR153wJg==}
-    engines: {node: '>=6'}
-
   caniuse-lite@1.0.30001692:
     resolution: {integrity: sha512-A95VKan0kdtrsnMubMKxEKUKImOPSuCpYgxSQBo036P5YYgVIcOYJEgt/txJWqObiRQeISNCfef9nvlQ0vbV7A==}
 
   client-only@0.0.1:
     resolution: {integrity: sha512-IV3Ou0jSMzZrd3pZ48nLkT9DA7Ag1pnPzaiQhpW7c3RbcqqzvzzVu+L8gfqMp/8IM2MQtSiqaCxrrcfu8I8rMA==}
-
-  cliui@6.0.0:
-    resolution: {integrity: sha512-t6wbgtoCXvAzst7QgXxJYqPt0usEfbgQdftEPbLL/cvv6HPE5VgvqCuAIDR0NgU52ds6rFwqrgakNLrHEjCbrQ==}
 
   color-convert@2.0.1:
     resolution: {integrity: sha512-RRECPsj7iu/xb5oKYcsFHSppFNnsj/52OVTRKb4zP5onXwVF3zVmmToNcOfGC+CRDpfK/U584fMg38ZHCaElKQ==}
@@ -341,10 +314,6 @@ packages:
   csstype@3.1.3:
     resolution: {integrity: sha512-M1uQkMl8rQK/szD0LNhtqxIPLpimGm8sOBwU7lLnCpSbTyY3yeU1Vc7l4KT5zT4s/yOxHH5O7tIuuLOCnLADRw==}
 
-  decamelize@1.2.0:
-    resolution: {integrity: sha512-z2S+W9X73hAUUki+N+9Za2lBlun89zigOyGrsax+KUQ6wKW4ZoWpEYBkGhQjwAjjDCkWxhY0VKEhk8wzY7F5cA==}
-    engines: {node: '>=0.10.0'}
-
   dequal@2.0.3:
     resolution: {integrity: sha512-0je+qPKHEMohvfRTCEo3CrPG6cAzAYgmzKyxRiYSSDkS6eGJdyVJm7WaYA5ECaAD9wLB2T4EEeymA5aFVcYXCA==}
     engines: {node: '>=6'}
@@ -353,31 +322,13 @@ packages:
     resolution: {integrity: sha512-bwy0MGW55bG41VqxxypOsdSdGqLwXPI/focwgTYCFMbdUiBAxLg9CFzG08sz2aqzknwiX7Hkl0bQENjg8iLByw==}
     engines: {node: '>=8'}
 
-  dijkstrajs@1.0.3:
-    resolution: {integrity: sha512-qiSlmBq9+BCdCA/L46dw8Uy93mloxsPSbwnm5yrKn2vMPiy8KyAskTF6zuV/j5BMsmOGZDPs7KjU+mjb670kfA==}
-
-  emoji-regex@8.0.0:
-    resolution: {integrity: sha512-MSjYzcWNOA0ewAHpz0MxpYFvwg6yjy1NG3xteoqz644VCo/RPgnr1/GGt+ic3iJTzQ8Eu3TdM14SawnVUmGE6A==}
-
-  find-up@4.1.0:
-    resolution: {integrity: sha512-PpOwAdQ/YlXQ2vj8a3h8IipDuYRi3wceVQQGYWxNINccq40Anw7BlsEXCMbt1Zt+OLA6Fq9suIpIWD0OsnISlw==}
-    engines: {node: '>=8'}
-
   fsevents@2.3.3:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
     engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
     os: [darwin]
 
-  get-caller-file@2.0.5:
-    resolution: {integrity: sha512-DyFP3BM/3YHTQOCUL/w0OZHR0lpKeGrxotcHWcqNEdnltqFwXVfhEBQ94eIo34AfQpo0rGki4cyIiftY06h2Fg==}
-    engines: {node: 6.* || 8.* || >= 10.*}
-
   is-arrayish@0.3.2:
     resolution: {integrity: sha512-eVRqCvVlZbuw3GrM63ovNSNAeA1K16kaR/LRY/92w0zxQ5/1YzwblUX652i4Xs9RwAGjW9d9y6X88t8OaAJfWQ==}
-
-  is-fullwidth-code-point@3.0.0:
-    resolution: {integrity: sha512-zymm5+u+sCsSWyD9qNaejV3DFvhCKclKdizYaJUuHA83RLjb7nSuGnddCHGv0hk+KY7BMAlsWeK4Ueg6EV6XQg==}
-    engines: {node: '>=8'}
 
   jotai@2.11.0:
     resolution: {integrity: sha512-zKfoBBD1uDw3rljwHkt0fWuja1B76R7CjznuBO+mSX6jpsO1EBeWNRKpeaQho9yPI/pvCv4recGfgOXGxwPZvQ==}
@@ -390,13 +341,6 @@ packages:
         optional: true
       react:
         optional: true
-
-  jsqr@1.4.0:
-    resolution: {integrity: sha512-dxLob7q65Xg2DvstYkRpkYtmKm2sPJ9oFhrhmudT1dZvNFFTlroai3AWSpLey/w5vMcLBXRgOJsbXpdN9HzU/A==}
-
-  locate-path@5.0.0:
-    resolution: {integrity: sha512-t7hw9pI+WvuwNJXwk5zVHpyhIqzg2qTlklJOf0mVxGSbe3Fp2VieZcduNYjaLDoy6p9uGpQEGWG87WpMKlNq8g==}
-    engines: {node: '>=8'}
 
   mitt@3.0.1:
     resolution: {integrity: sha512-vKivATfr97l2/QBCYAkXYDbrIWPM2IIKEl7YPhjCvKlG3kE2gm+uBo6nEXK3M5/Ffh/FLpKExzOQ3JJoJGFKBw==}
@@ -449,28 +393,8 @@ packages:
       react-router-dom:
         optional: true
 
-  p-limit@2.3.0:
-    resolution: {integrity: sha512-//88mFWSJx8lxCzwdAABTJL2MyWB12+eIY7MDL2SqLmAkeKU9qxRvWuSyTjm3FUmpBEMuFfckAIqEaVGUDxb6w==}
-    engines: {node: '>=6'}
-
-  p-locate@4.1.0:
-    resolution: {integrity: sha512-R79ZZ/0wAxKGu3oYMlz8jy/kbhsNrS7SKZ7PxEHBgJ5+F2mtFW2fK2cOtBh1cHYkQsbzFV7I+EoRKe6Yt0oK7A==}
-    engines: {node: '>=8'}
-
-  p-try@2.2.0:
-    resolution: {integrity: sha512-R4nPAVTAU0B9D35/Gk3uJf/7XYbQcyohSKdvAxIRSNghFl4e71hVoGnBNQz9cWaXxO2I10KTC+3jMdvvoKw6dQ==}
-    engines: {node: '>=6'}
-
-  path-exists@4.0.0:
-    resolution: {integrity: sha512-ak9Qy5Q7jYb2Wwcey5Fpvg2KoAc/ZIhLSLOSBmRmygPsGwkVVt0fZa0qrtMz+m6tJTAHfZQ8FnmB4MG4LWy7/w==}
-    engines: {node: '>=8'}
-
   picocolors@1.1.1:
     resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
-
-  pngjs@5.0.0:
-    resolution: {integrity: sha512-40QW5YalBNfQo5yRYmiw7Yz6TKKVr3h6970B2YE+3fQpsWcrbj1PzJgxeJ19DRQjhMbKPIuMY8rFaXc8moolVw==}
-    engines: {node: '>=10.13.0'}
 
   postcss@8.4.31:
     resolution: {integrity: sha512-PS08Iboia9mts/2ygV3eLpY5ghnUcfLV/EXTOW1E2qYxJKGGBUtNjN76FYHnMs36RmARn41bC0AZmn+rR0OVpQ==}
@@ -481,53 +405,25 @@ packages:
     engines: {node: '>=18.18'}
     hasBin: true
 
-  qrcode.react@4.2.0:
-    resolution: {integrity: sha512-QpgqWi8rD9DsS9EP3z7BT+5lY5SFhsqGjpgW5DY/i3mK4M9DTBNz3ErMi8BWYEfI3L0d8GIbGmcdFAS1uIRGjA==}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
-
-  qrcode@1.5.4:
-    resolution: {integrity: sha512-1ca71Zgiu6ORjHqFBDpnSMTR2ReToX4l1Au1VFLyVeBTFavzQnv5JxMFr3ukHVKpSrSA2MCk0lNJSykjUfz7Zg==}
-    engines: {node: '>=10.13.0'}
-    hasBin: true
-
   react-dom@19.0.0:
     resolution: {integrity: sha512-4GV5sHFG0e/0AD4X+ySy6UJd3jVl1iNsNHdpad0qhABJ11twS3TTBnseqsKurKcsNqCEFeGL3uLpVChpIO3QfQ==}
     peerDependencies:
       react: ^19.0.0
 
-  react-qr-reader@3.0.0-beta-1:
-    resolution: {integrity: sha512-5HeFH9x/BlziRYQYGK2AeWS9WiKYZtGGMs9DXy3bcySTX3C9UJL9EwcPnWw8vlf7JP4FcrAlr1SnZ5nsWLQGyw==}
-    peerDependencies:
-      react: ^16.8.0 || ^17.0.0
-      react-dom: ^16.8.0 || ^17.0.0
-
   react@19.0.0:
     resolution: {integrity: sha512-V8AVnmPIICiWpGfm6GLzCR/W5FXLchHop40W4nXBmdlEceh16rCN8O8LNWm5bh5XUX91fh7KpA+W0TgMKmgTpQ==}
     engines: {node: '>=0.10.0'}
 
-  require-directory@2.1.1:
-    resolution: {integrity: sha512-fGxEI7+wsG9xrvdjsrlmL22OMTTiHRwAMroiEeMgq8gzoLC/PQr7RsRDSTLUg/bZAZtF+TVIkHc6/4RIKrui+Q==}
-    engines: {node: '>=0.10.0'}
-
-  require-main-filename@2.0.0:
-    resolution: {integrity: sha512-NKN5kMDylKuldxYLSUfrbo5Tuzh4hd+2E8NPPX02mZtn1VuREQToYe/ZdlJy+J3uCpfaiGF05e7B8W0iXbQHmg==}
-
-  rollup@2.79.2:
-    resolution: {integrity: sha512-fS6iqSPZDs3dr/y7Od6y5nha8dW1YnbgtsyotCVvoFGKbERG++CVRFv1meyGDE1SNItQA8BrnCw7ScdAhRJ3XQ==}
-    engines: {node: '>=10.0.0'}
-    hasBin: true
-
   scheduler@0.25.0:
     resolution: {integrity: sha512-xFVuu11jh+xcO7JOAGJNOXld8/TcEHK/4CituBUeUb5hqxJLj9YuemAEuvm9gQ/+pgXYfbQuqAkiYu+u7YEsNA==}
+
+  sdp@3.2.0:
+    resolution: {integrity: sha512-d7wDPgDV3DDiqulJjKiV2865wKsJ34YI+NDREbm+FySq6WuKOikwyNQcm+doLAZ1O6ltdO0SeKle2xMpN3Brgw==}
 
   semver@7.6.3:
     resolution: {integrity: sha512-oVekP1cKtI+CTDvHWYFUcMtsK/00wmAEfyqKfNdARm8u1wNVhSgaX7A8d4UuIlUI5e84iEwOhs7ZPYRmzU9U6A==}
     engines: {node: '>=10'}
     hasBin: true
-
-  set-blocking@2.0.0:
-    resolution: {integrity: sha512-KiKBS8AnWGEyLzofFfmvKwpdPzqiy16LvQfK3yv/fVH7Bj13/wl3JSR1J+rfgRE9q7xUJK4qvgS8raSOeLUehw==}
 
   sharp@0.33.5:
     resolution: {integrity: sha512-haPVm1EkS9pgvHrQ/F3Xy+hgcuMV0Wm9vfIBSiwZ05k+xgb0PkBQpGsAA/oWdDobNaZTH5ppvHtzCFbnSEwHVw==}
@@ -543,14 +439,6 @@ packages:
   streamsearch@1.1.0:
     resolution: {integrity: sha512-Mcc5wHehp9aXz1ax6bZUyY5afg9u2rv5cqQI3mRrYkGC8rW2hM02jWuwjtL++LS5qinSyhj2QfLyNsuc+VsExg==}
     engines: {node: '>=10.0.0'}
-
-  string-width@4.2.3:
-    resolution: {integrity: sha512-wKyQRQpjJ0sIp62ErSZdGsjMJWsap5oRNihHhu6G7JVO/9jIB6UyevL+tXuOqrng8j/cxKTWyWUwvSTriiZz/g==}
-    engines: {node: '>=8'}
-
-  strip-ansi@6.0.1:
-    resolution: {integrity: sha512-Y38VPSHcqkFrCpFnQ9vuSXmquuv5oXOKpGeT6aGrr3o3Gc9AlVa6JBfUSOCnbxGGZF+/0ooI7KrPuUSztUdU5A==}
-    engines: {node: '>=8'}
 
   styled-jsx@5.1.6:
     resolution: {integrity: sha512-qSVyDTeMotdvQYoHWLNGwRFJHC+i+ZvdBRYosOFgC+Wg1vx4frN2/RG/NA7SYqqvKNLf39P2LSRA2pu6n0XYZA==}
@@ -570,10 +458,6 @@ packages:
     peerDependencies:
       react: ^16.11.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
-  ts-custom-error@3.3.1:
-    resolution: {integrity: sha512-5OX1tzOjxWEgsr/YEUWSuPrQ00deKLh6D7OTWcvNHm12/7QPyRh8SYpyWvA4IZv8H/+GQWQEh/kwo95Q9OVW1A==}
-    engines: {node: '>=14.0.0'}
-
   tslib@2.8.1:
     resolution: {integrity: sha512-oJFu94HQb+KVduSUQL7wnpmqnfmLsOA/nAh6b6EH0wCEoK0/mPeXU6c3wKDV83MkOuHPRHtSXKKU99IBazS/2w==}
 
@@ -590,23 +474,12 @@ packages:
     peerDependencies:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
-  which-module@2.0.1:
-    resolution: {integrity: sha512-iBdZ57RDvnOR9AGBhML2vFZf7h8vmBjhoaZqODJBFWHVtKkDmKuHai3cx5PgVMrX5YDNp27AofYbAwctSS+vhQ==}
+  webrtc-adapter@9.0.1:
+    resolution: {integrity: sha512-1AQO+d4ElfVSXyzNVTOewgGT/tAomwwztX/6e3totvyyzXPvXIIuUUjAmyZGbKBKbZOXauuJooZm3g6IuFuiNQ==}
+    engines: {node: '>=6.0.0', npm: '>=3.10.0'}
 
-  wrap-ansi@6.2.0:
-    resolution: {integrity: sha512-r6lPcBGxZXlIcymEu7InxDMhdW0KDxpLgoFLcguasxCaJ/SOIZwINatK9KY/tf+ZrlywOKU0UDj3ATXUBfxJXA==}
-    engines: {node: '>=8'}
-
-  y18n@4.0.3:
-    resolution: {integrity: sha512-JKhqTOwSrqNA1NY5lSztJ1GrBiUodLMmIZuLiDaMRJ+itFd+ABVE8XBjOvIWL+rSqNDC74LCSFmlb/U4UZ4hJQ==}
-
-  yargs-parser@18.1.3:
-    resolution: {integrity: sha512-o50j0JeToy/4K6OZcaQmW6lyXXKhq7csREXcDwk2omFPJEwUNOVtJKvmDr9EI1fAJZUyZcRF7kxGBWmRXudrCQ==}
-    engines: {node: '>=6'}
-
-  yargs@15.4.1:
-    resolution: {integrity: sha512-aePbxDmcYW++PaqBsJ+HYUFwCdv4LVvdnhBy78E57PIor8/OVvhMrADFFEDh8DHDFRv/O9i3lPhsENjO7QX0+A==}
-    engines: {node: '>=8'}
+  zxing-wasm@1.3.4:
+    resolution: {integrity: sha512-9l0QymyATF19FmI92QHe7Dayb+BUN7P7zFAt5iDgTnUf0dFWokz6GVA/W9EepjW5q8s3e89fIE/7uxpX27yqEQ==}
 
 snapshots:
 
@@ -749,15 +622,15 @@ snapshots:
 
   '@types/bcryptjs@2.4.6': {}
 
+  '@types/dom-webcodecs@0.1.11': {}
+
+  '@types/emscripten@1.39.13': {}
+
   '@types/node@22.10.5':
     dependencies:
       undici-types: 6.20.0
 
   '@types/nodemailer@6.4.17':
-    dependencies:
-      '@types/node': 22.10.5
-
-  '@types/qrcode@1.5.5':
     dependencies:
       '@types/node': 22.10.5
 
@@ -769,26 +642,17 @@ snapshots:
     dependencies:
       csstype: 3.1.3
 
-  '@zxing/browser@0.0.7(@zxing/library@0.18.6)':
+  '@yudiel/react-qr-scanner@2.1.0(react-dom@19.0.0(react@19.0.0))(react@19.0.0)':
     dependencies:
-      '@zxing/library': 0.18.6
-    optionalDependencies:
-      '@zxing/text-encoding': 0.9.0
+      barcode-detector: 2.3.1
+      react: 19.0.0
+      react-dom: 19.0.0(react@19.0.0)
+      webrtc-adapter: 9.0.1
 
-  '@zxing/library@0.18.6':
+  barcode-detector@2.3.1:
     dependencies:
-      ts-custom-error: 3.3.1
-    optionalDependencies:
-      '@zxing/text-encoding': 0.9.0
-
-  '@zxing/text-encoding@0.9.0':
-    optional: true
-
-  ansi-regex@5.0.1: {}
-
-  ansi-styles@4.3.0:
-    dependencies:
-      color-convert: 2.0.1
+      '@types/dom-webcodecs': 0.1.11
+      zxing-wasm: 1.3.4
 
   bcryptjs@2.4.3: {}
 
@@ -796,23 +660,17 @@ snapshots:
     dependencies:
       streamsearch: 1.1.0
 
-  camelcase@5.3.1: {}
-
   caniuse-lite@1.0.30001692: {}
 
   client-only@0.0.1: {}
 
-  cliui@6.0.0:
-    dependencies:
-      string-width: 4.2.3
-      strip-ansi: 6.0.1
-      wrap-ansi: 6.2.0
-
   color-convert@2.0.1:
     dependencies:
       color-name: 1.1.4
+    optional: true
 
-  color-name@1.1.4: {}
+  color-name@1.1.4:
+    optional: true
 
   color-string@1.9.1:
     dependencies:
@@ -828,42 +686,21 @@ snapshots:
 
   csstype@3.1.3: {}
 
-  decamelize@1.2.0: {}
-
   dequal@2.0.3: {}
 
   detect-libc@2.0.3:
     optional: true
 
-  dijkstrajs@1.0.3: {}
-
-  emoji-regex@8.0.0: {}
-
-  find-up@4.1.0:
-    dependencies:
-      locate-path: 5.0.0
-      path-exists: 4.0.0
-
   fsevents@2.3.3:
     optional: true
 
-  get-caller-file@2.0.5: {}
-
   is-arrayish@0.3.2:
     optional: true
-
-  is-fullwidth-code-point@3.0.0: {}
 
   jotai@2.11.0(@types/react@19.0.4)(react@19.0.0):
     optionalDependencies:
       '@types/react': 19.0.4
       react: 19.0.0
-
-  jsqr@1.4.0: {}
-
-  locate-path@5.0.0:
-    dependencies:
-      p-locate: 4.1.0
 
   mitt@3.0.1: {}
 
@@ -903,21 +740,7 @@ snapshots:
     optionalDependencies:
       next: 15.1.4(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
 
-  p-limit@2.3.0:
-    dependencies:
-      p-try: 2.2.0
-
-  p-locate@4.1.0:
-    dependencies:
-      p-limit: 2.3.0
-
-  p-try@2.2.0: {}
-
-  path-exists@4.0.0: {}
-
   picocolors@1.1.1: {}
-
-  pngjs@5.0.0: {}
 
   postcss@8.4.31:
     dependencies:
@@ -931,45 +754,19 @@ snapshots:
     optionalDependencies:
       fsevents: 2.3.3
 
-  qrcode.react@4.2.0(react@19.0.0):
-    dependencies:
-      react: 19.0.0
-
-  qrcode@1.5.4:
-    dependencies:
-      dijkstrajs: 1.0.3
-      pngjs: 5.0.0
-      yargs: 15.4.1
-
   react-dom@19.0.0(react@19.0.0):
     dependencies:
       react: 19.0.0
       scheduler: 0.25.0
 
-  react-qr-reader@3.0.0-beta-1(react-dom@19.0.0(react@19.0.0))(react@19.0.0):
-    dependencies:
-      '@zxing/browser': 0.0.7(@zxing/library@0.18.6)
-      '@zxing/library': 0.18.6
-      react: 19.0.0
-      react-dom: 19.0.0(react@19.0.0)
-      rollup: 2.79.2
-
   react@19.0.0: {}
-
-  require-directory@2.1.1: {}
-
-  require-main-filename@2.0.0: {}
-
-  rollup@2.79.2:
-    optionalDependencies:
-      fsevents: 2.3.3
 
   scheduler@0.25.0: {}
 
+  sdp@3.2.0: {}
+
   semver@7.6.3:
     optional: true
-
-  set-blocking@2.0.0: {}
 
   sharp@0.33.5:
     dependencies:
@@ -1007,16 +804,6 @@ snapshots:
 
   streamsearch@1.1.0: {}
 
-  string-width@4.2.3:
-    dependencies:
-      emoji-regex: 8.0.0
-      is-fullwidth-code-point: 3.0.0
-      strip-ansi: 6.0.1
-
-  strip-ansi@6.0.1:
-    dependencies:
-      ansi-regex: 5.0.1
-
   styled-jsx@5.1.6(react@19.0.0):
     dependencies:
       client-only: 0.0.1
@@ -1028,8 +815,6 @@ snapshots:
       react: 19.0.0
       use-sync-external-store: 1.4.0(react@19.0.0)
 
-  ts-custom-error@3.3.1: {}
-
   tslib@2.8.1: {}
 
   typescript@5.7.3: {}
@@ -1040,31 +825,10 @@ snapshots:
     dependencies:
       react: 19.0.0
 
-  which-module@2.0.1: {}
-
-  wrap-ansi@6.2.0:
+  webrtc-adapter@9.0.1:
     dependencies:
-      ansi-styles: 4.3.0
-      string-width: 4.2.3
-      strip-ansi: 6.0.1
+      sdp: 3.2.0
 
-  y18n@4.0.3: {}
-
-  yargs-parser@18.1.3:
+  zxing-wasm@1.3.4:
     dependencies:
-      camelcase: 5.3.1
-      decamelize: 1.2.0
-
-  yargs@15.4.1:
-    dependencies:
-      cliui: 6.0.0
-      decamelize: 1.2.0
-      find-up: 4.1.0
-      get-caller-file: 2.0.5
-      require-directory: 2.1.1
-      require-main-filename: 2.0.0
-      set-blocking: 2.0.0
-      string-width: 4.2.3
-      which-module: 2.0.1
-      y18n: 4.0.3
-      yargs-parser: 18.1.3
+      '@types/emscripten': 1.39.13

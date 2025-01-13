@@ -71,9 +71,8 @@ const AdminDashboard = () => {
     );
 };
 
-// Function to calculate attendance status
 const calculateAttendance = (loginTime: Date, logoutTime: Date): string => {
-    const duration = (logoutTime.getTime() - loginTime.getTime()) / 1000 / 60; // duration in minutes
+    const duration = (logoutTime.getTime() - loginTime.getTime()) / 1000 / 60;
     return duration >= 480 ? 'Present' : 'Absent';
 };
 

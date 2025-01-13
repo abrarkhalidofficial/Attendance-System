@@ -10,16 +10,15 @@ const AdminLeaveRequestsPage: React.FC = () => {
   useEffect(() => {
     const fetchLeaveRequests = async () => {
       const result = await getLeaveRequests();
-      console.log(result);  // Log the result to check the response
+      console.log(result);
       if (result.status === 'ok') {
         setLeaveRequests(result.leaveRequests || []);
-        setFilteredRequests(result.leaveRequests || []); // Set initial filtered data
+        setFilteredRequests(result.leaveRequests || []);
       }
     };
     fetchLeaveRequests();
   }, []);
 
-  // Handle the approval/decline of a leave request
   const handleAction = async (id: string, status: 'APPROVED' | 'REJECTED') => {
     const formData = new FormData();
     formData.append('id', id);
@@ -28,7 +27,7 @@ const AdminLeaveRequestsPage: React.FC = () => {
     const result = await updateLeaveRequest(formData);
     if (result.status === 'ok') {
       setMessage('Leave request updated successfully');
-      // Re-fetch leave requests after the update
+
       const res = await getLeaveRequests();
       if (res.status === 'ok') {
         setLeaveRequests(res.leaveRequests || []);
@@ -39,12 +38,10 @@ const AdminLeaveRequestsPage: React.FC = () => {
     }
   };
 
-  // Function to format Date objects to a readable string
   const formatDate = (date: Date) => {
     return new Date(date).toLocaleDateString();
   };
 
-  // Function to apply custom styles based on leave request status
   const getStatusClass = (status: string) => {
     switch (status) {
       case 'APPROVED':
@@ -56,7 +53,6 @@ const AdminLeaveRequestsPage: React.FC = () => {
     }
   };
 
-  // Function to filter leave requests based on status
   const applyFilter = (filter: 'ALL' | 'APPROVED' | 'REJECTED' | 'PENDING', requests: any[]) => {
     switch (filter) {
       case 'APPROVED':
@@ -75,7 +71,6 @@ const AdminLeaveRequestsPage: React.FC = () => {
     }
   };
 
-  // Function to handle filter button click
   const handleFilterChange = (newFilter: 'ALL' | 'APPROVED' | 'REJECTED' | 'PENDING') => {
     setFilter(newFilter);
     applyFilter(newFilter, leaveRequests);
@@ -184,38 +179,43 @@ const AdminLeaveRequestsPage: React.FC = () => {
             <p style={{ fontSize: '1rem', color: '#555' }}>Status: {request.status}</p>
 
             <div>
-              <button
-                onClick={() => handleAction(request.id, 'APPROVED')}
-                style={{
-                  backgroundColor: '#4CAF50',
-                  color: '#fff',
-                  padding: '8px 16px',
-                  border: 'none',
-                  borderRadius: '5px',
-                  cursor: 'pointer',
-                  marginRight: '10px',
-                }}
-              >
-                Approve
-              </button>
+              {request.status === 'PENDING' && (
+                <>
+                  <button
+                    onClick={() => handleAction(request.id, 'APPROVED')}
+                    style={{
+                      backgroundColor: '#4CAF50',
+                      color: '#fff',
+                      padding: '8px 16px',
+                      border: 'none',
+                      borderRadius: '5px',
+                      cursor: 'pointer',
+                      marginRight: '10px',
+                    }}
+                  >
+                    Approve
+                  </button>
 
-              <button
-                onClick={() => handleAction(request.id, 'REJECTED')}
-                style={{
-                  backgroundColor: '#f44336',
-                  color: '#fff',
-                  padding: '8px 16px',
-                  border: 'none',
-                  borderRadius: '5px',
-                  cursor: 'pointer',
-                }}
-              >
-                Decline
-              </button>
+                  <button
+                    onClick={() => handleAction(request.id, 'REJECTED')}
+                    style={{
+                      backgroundColor: '#f44336',
+                      color: '#fff',
+                      padding: '8px 16px',
+                      border: 'none',
+                      borderRadius: '5px',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Decline
+                  </button>
+                </>
+              )}
             </div>
           </li>
         ))}
       </ul>
+
     </div>
   );
 };
