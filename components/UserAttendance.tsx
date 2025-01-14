@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { getAttendanceDetails, markAttendance } from "@/actions";
 import { Scanner } from "@yudiel/react-qr-scanner";
+import { toast } from "react-toastify";
 
 interface AttendanceRecord {
     loginTime: string;
@@ -70,7 +71,7 @@ const UserAttendance: React.FC<UserAttendanceProps> = ({ userId }) => {
             try {
                 const response = await markAttendance(userId, data);
                 if (response.status === "ok") {
-                    alert("Login successful!");
+                    toast.success("Login successful!");
                     setShowScanner(false);
                     setIsLoggedIn(true);
 
@@ -112,7 +113,7 @@ const UserAttendance: React.FC<UserAttendanceProps> = ({ userId }) => {
     const handleLogout = () => {
         setIsLoggedIn(false);
         setShowScanner(false);
-        alert("Logged out successfully!");
+        toast.success("Logged out successfully!");
     };
 
     return (

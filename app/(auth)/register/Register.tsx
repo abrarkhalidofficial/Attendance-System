@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { setPassword } from "@/actions"; // Import the setPassword function
+import { toast } from "react-toastify";
 
 export default function Register() {
   const [password, setPasswordState] = useState("");
@@ -38,7 +39,7 @@ export default function Register() {
       const result = await setPassword({ token, password, confirmPassword });
 
       // Handle success and navigate to login page
-      alert(result.message);
+      toast.success(result.message);
       router.push("/");
     } catch (err: any) {
       setError(err.message || "An error occurred");

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { addUser } from '@/actions'; // Import addUser function from your actions file
 import UserList from './UserList';
 import usePostAction from '@/hooks/usePostAction';
+import { toast } from 'react-toastify';
 
 
 
@@ -10,10 +11,10 @@ const UserPage = () => {
     action: addUser,
     defaultState: { error: "", message: "" },
     onSuccess(data) {
-      alert(data.message);
+      toast.success(data.message);
     },
     onError(data) {
-      alert(data.error);
+      toast.error(data.error);
     },
   })
   return (

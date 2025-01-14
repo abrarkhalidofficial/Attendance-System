@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { login } from "@/actions";
 import usePostAction from "@/hooks/usePostAction";
+import { toast } from "react-toastify";
 
 export default function Login() {
   const router = useRouter();
@@ -12,7 +13,7 @@ export default function Login() {
   const { action, isPending, data } = usePostAction({
     action: login,
     defaultState: { error: "" },
-    onError: (data) => alert(data.error),
+    onError: (data) => toast.error(data.error),
     onSuccess: () => {
       router.refresh();
 

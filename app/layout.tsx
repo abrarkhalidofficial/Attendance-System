@@ -1,10 +1,10 @@
-
 import JotaiProvider from "@/providers/Jotai";
 import type { Metadata } from "next";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { ReactNode } from "react";
 
 import "@/styles/globals.css";
+import ToastProvider from "@/providers/ToastProvider";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -20,7 +20,9 @@ export default async function RootLayout({
     <html lang="en">
       <body>
         <NuqsAdapter>
-          <JotaiProvider>{children}</JotaiProvider>
+          <ToastProvider>
+            <JotaiProvider>{children}</JotaiProvider>
+          </ToastProvider>
         </NuqsAdapter>
       </body>
     </html>
