@@ -1,99 +1,106 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
-
-import Link from "next/link";
-import { register } from "@/actions";
-import usePostAction from "@/hooks/usePostAction";
+import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { setPassword } from "@/actions"; // Import the setPassword function
 
 export default function Register() {
+  const [password, setPasswordState] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const invite = searchParams.get("invite");
 
-  const { action, isPending, data } = usePostAction({
-    action: register,
-    defaultState: { error: "" },
-    onError: (data) => alert(data.error),
-    onSuccess: () => {
-      if (invite) {
-        router.replace("/?invite=" + invite);
-      } else {
-        router.replace("/");
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(null);
+
+    if (!password || !confirmPassword) {
+      setError("All fields are required");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+
+      // Call setPassword from actions instead of fetch
+      const token = new URLSearchParams(window.location.search).get("token"); // Extract token from URL query string
+      if (!token) {
+        setError("Token is missing");
+        return;
       }
-    },
-    
-  });
+
+      const result = await setPassword({ token, password, confirmPassword });
+
+      // Handle success and navigate to login page
+      alert(result.message);
+      router.push("/");
+    } catch (err: any) {
+      setError(err.message || "An error occurred");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <form
+      onSubmit={handleSubmit}
       style={{
         maxWidth: 500,
         margin: "50px auto",
-        padding: 50,
+        padding: 20,
         border: "1px solid #ddd",
         borderRadius: 8,
         boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
         backgroundColor: "#fff",
       }}
-      action={action}
     >
-      <div
-        style={{
-          fontSize: 24,
-          fontWeight: "bold",
-          marginBottom: 20,
-          textAlign: "center",
-          color: "#333",
-        }}
-      >
-        Register
-      </div>
+      <h1 style={{ textAlign: "center", marginBottom: 20 }}>Set Your Password</h1>
+      {error && (
+        <p
+          style={{
+            color: "red",
+            marginBottom: 15,
+            textAlign: "center",
+          }}
+        >
+          {error}
+        </p>
+      )}
       <input
-      
+        type="password"
+        placeholder="Password"
+        value={password}
+        onChange={(e) => setPasswordState(e.target.value)}
         style={{
           width: "100%",
-          maxWidth: 480,
           padding: 10,
           marginBottom: 15,
           border: "1px solid #ccc",
+          borderRadius: 4,
         }}
-      
-      
-      name="email" type="text" placeholder="Email" />
+      />
       <input
-        style={{
-          width: "100%",
-          maxWidth: 480,
-          padding: 10,
-          marginBottom: 15,
-          border: "1px solid #ccc",
-        }}
-      
-      name="password" type="password" placeholder="Password" />
-      <input
-
-        style={{
-          width: "100%",
-          maxWidth: 480,
-          padding: 10,
-          marginBottom: 15,
-          border: "1px solid #ccc",
-        }}
-
-        name="confirmPassword"
         type="password"
         placeholder="Confirm Password"
-      />
-      {data.error && <p
+        value={confirmPassword}
+        onChange={(e) => setConfirmPassword(e.target.value)}
         style={{
-          color: "red",
-          fontSize: 14,
+          width: "100%",
+          padding: 10,
           marginBottom: 15,
+          border: "1px solid #ccc",
+          borderRadius: 4,
         }}
-      
-      >{data.error}</p>}
+      />
       <button
+        type="submit"
+        disabled={isSubmitting}
         style={{
           width: "100%",
           padding: 10,
@@ -101,22 +108,11 @@ export default function Register() {
           color: "#fff",
           border: "none",
           borderRadius: 4,
-          cursor: "pointer",
+          cursor: isSubmitting ? "not-allowed" : "pointer",
         }}
-      
-      disabled={isPending} type="submit">
-        {isPending ? "Loading..." : "Register"}
+      >
+        {isSubmitting ? "Submitting..." : "Set Password"}
       </button>
-      <Link 
-        style={{
-          display: "block",
-          textAlign: "center",
-          marginTop: 20,
-          color: "#333",
-          textDecoration: "none",
-        }}
-      
-      href={invite ? `/?invite=${invite}` : "/"}>Login</Link>
     </form>
   );
 }

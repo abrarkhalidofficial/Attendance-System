@@ -1,115 +1,81 @@
-import React from 'react'
-import { adduser } from '@/actions'
-import UserList from './UserList'
+import React, { useState } from 'react';
+import { addUser } from '@/actions'; // Import addUser function from your actions file
+import UserList from './UserList';
+import usePostAction from '@/hooks/usePostAction';
 
-export default function Adduser() {
-  const [userData, setUserData] = React.useState({
-    email: '',
-    phone: '',
-    address: '',
-    name: '',
-    role: ''
+
+
+const UserPage = () => {
+  const { data, action, isPending } = usePostAction({
+    action: addUser,
+    defaultState: { error: "", message: "" },
+    onSuccess(data) {
+      alert(data.message);
+    },
+    onError(data) {
+      alert(data.error);
+    },
   })
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setUserData({ ...userData, [e.target.name]: e.target.value })
-  }
-
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    const formData = new FormData()
-    formData.append('email', userData.email)
-    formData.append('phone', userData.phone)
-    formData.append('address', userData.address)
-    formData.append('name', userData.name)
-    formData.append('role', userData.role)
-
-
-    const response = await adduser({ status: null, error: '' }, formData)
-
-    if (response.status === 'ok') {
-      alert('User added successfully!')
-    } else {
-      alert(response.error)
-    }
-  }
-
   return (
-    <div style={{ padding: '20px', maxWidth: '100%', margin: 'auto', borderRadius: '8px' }}>
-      <h1 style={{ textAlign: 'center', fontSize: '24px', marginBottom: '20px' }}>Add New User</h1>
-      <form style={{
-        display: 'flex'
-      }} onSubmit={handleSubmit}>
-        <input
-          type="email"
-          name="email"
-          value={userData.email}
-          onChange={handleChange}
-          placeholder="Email"
-          required
-          style={{ width: '100%', padding: '10px', margin: '10px 0', borderRadius: '4px', border: '1px solid #ccc' }}
-        />
-        <input
-          type="text"
-          name="phone"
-          value={userData.phone}
-          onChange={handleChange}
-          placeholder="Phone"
-          required
-          style={{ width: '100%', padding: '10px', margin: '10px 0', borderRadius: '4px', border: '1px solid #ccc' }}
-        />
-        <input
-          type="text"
-          name="address"
-          value={userData.address}
-          onChange={handleChange}
-          placeholder="Address"
-          required
-          style={{ width: '100%', padding: '10px', margin: '10px 0', borderRadius: '4px', border: '1px solid #ccc' }}
-        />
-        <input
-          type="text"
-          name="name"
-          value={userData.name}
-          onChange={handleChange}
-          placeholder="Name"
-          required
-          style={{ width: '100%', padding: '10px', margin: '10px 0', borderRadius: '4px', border: '1px solid #ccc' }}
-        />
+    <div className="user-page">
+      <h1>Add User</h1>
+      <form action={action} >
+        <div>
+          <label htmlFor="name">Name</label>
+          <input
+            type="text"
+            id="name"
+            name="name"
+            required
+          />
+        </div>
+        <div>
+          <label htmlFor="email">Email</label>
+          <input
+            type="email"
+            id="email"
+            name="email"
 
-        <select
-          name="role"
-          value={userData.role}
-          onChange={handleChange}
-          required
-          style={{ width: '100%', padding: '10px', margin: '10px 0', borderRadius: '4px', border: '1px solid #ccc' }}
-        >
-          {['User', 'Admin'].map((role) => (
-            <option key={role} value={role}>{role}</option>
-          ))}
-          {/* Add other roles as needed */}
-        </select>
+          />
+        </div>
+        <div>
+          <label htmlFor="phone">Phone</label>
+          <input
+            type="text"
+            id="phone"
+            name="phone"
 
-        <button type="submit" disabled={!userData.email || !userData.phone || !userData.address || !userData.name || !userData.role}
-          style={
-            {
-              padding: '10px',
-              margin: '10px 0',
-              width: '100%',
-              borderRadius: '4px',
-              border: 'none',
-              backgroundColor: '#007bff',
-              color: '#fff',
-              cursor: 'pointer'
-            }}
-        >
-          Add User
-        </button>
+          />
+        </div>
+        <div>
+          <label htmlFor="address">Address</label>
+          <input
+            type="text"
+            id="address"
+            name="address"
+
+          />
+        </div>
+        <div>
+          <label htmlFor="role">Role</label>
+          <select
+
+            id="role"
+            name="role"
+
+          >
+            <option value="USER">User</option>
+            <option value="ADMIN">Admin</option>
+            {/* Add other roles as needed */}
+          </select>
+        </div>
+        <button type="submit">{
+          isPending ? "Adding User..." : "Add User"
+        }</button>
       </form>
       <UserList />
-    </div >
+    </div>
+  );
+};
 
-  )
-}
-
-
+export default UserPage;

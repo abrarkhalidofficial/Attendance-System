@@ -14,7 +14,6 @@ export default function Login() {
     defaultState: { error: "" },
     onError: (data) => alert(data.error),
     onSuccess: () => {
-
       router.refresh();
 
     },

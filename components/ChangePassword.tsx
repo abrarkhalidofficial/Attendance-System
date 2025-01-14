@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { changePassword, checkUser, updatePassword } from '@/actions';
+import { changePassword, updatePassword } from '@/actions';
 import { useRouter } from 'next/navigation';
 
 const ChangePassword = () => {
@@ -176,3 +176,16 @@ const ChangePassword = () => {
 };
 
 export default ChangePassword;
+const checkUser = async () => {
+    // Simulate an API call to get user information
+    return new Promise<{ loggedIn: boolean; role: string | null; id: string | null }>((resolve) => {
+        setTimeout(() => {
+            resolve({
+                loggedIn: true,
+                role: 'user',
+                id: '12345',
+            });
+        }, 1000);
+    });
+};
+

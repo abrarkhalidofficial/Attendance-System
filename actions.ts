@@ -1,12 +1,14 @@
 "use server";
 import nodemailer from 'nodemailer';
 import { cookies } from "next/headers";
-
-
 import bcryptjs from "bcryptjs";
 import prisma from "./lib/prisma";
 import exp from "constants";
+import jwt from "jsonwebtoken";
 import crypto from "crypto";
+
+
+
 
 
 export async function login(
@@ -14,6 +16,7 @@ export async function login(
   formData: FormData
 ) {
   const email = formData.get("email") as string;
+  const password = formData.get("password") as string;
 
   if (!email) {
     return {
@@ -37,7 +40,7 @@ export async function login(
     };
   }
 
-  const password = formData.get("password") as string;
+
 
   const isPasswordValid = await bcryptjs.compare(password, user.password);
 
@@ -57,75 +60,6 @@ export async function login(
   return { ...prevState, status: "ok", error: "" };
 }
 
-export async function register(
-  prevState: { status: string | null; error: string },
-  formData: FormData
-) {
-  const email = formData.get("email") as string;
-
-  if (!email) {
-    return {
-      ...prevState,
-      status: "error",
-      error: "Email is required",
-    };
-  }
-
-  if (!email.includes("@")) {
-    return {
-      ...prevState,
-      status: "error",
-      error: "Email is invalid",
-    };
-  }
-
-  const user = await prisma.user.findUnique({
-    where: {
-      email,
-    },
-  });
-
-  if (user) {
-    return {
-      ...prevState,
-      status: "error",
-      error: "Email is already in use",
-    };
-  }
-
-  const password = formData.get("password") as string;
-
-  if (!password) {
-    return { ...prevState, status: "error", error: "Password is required" };
-  }
-
-  const confirmPassword = formData.get("confirmPassword") as string;
-
-  if (!confirmPassword) {
-    return {
-      ...prevState,
-      status: "error",
-      error: "Confirm Password is required",
-    };
-  }
-
-  if (password !== confirmPassword) {
-    return { ...prevState, status: "error", error: "Passwords do not match" };
-  }
-
-  const hashedPassword = await bcryptjs.hash(password, 10);
-
-  await prisma.user.create({
-    data: {
-      name: email.split("@")[0],
-      email,
-      role: "USER", 
-      password: hashedPassword,
-    },
-  });
-
-  return { ...prevState, status: "ok", error: "" };
-}
 
 export async function handleLeaveRequest(formData: FormData): Promise<{ status: string; error?: string; message?: string }> {
   const userId = formData.get('userId') as string;
@@ -190,17 +124,6 @@ export async function updateLeaveRequest(formData: FormData): Promise<{ status: 
 }
 
 
-export async function checkUser() {
-  const token = (await cookies()).get('token');
-
-  if (!token) {
-    return { loggedIn: false, role: null };
-  }
-
-  const { id, role } = JSON.parse(token.value);
-
-  return { loggedIn: true, role, id };
-}
 export async function changePassword()
 {
   const token = (await cookies()).get('token');
@@ -262,91 +185,6 @@ export async function updatePassword(
 
 
 
-function generateRandomPassword(length: number = 12): string {
-  const charset = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+';
-  let password = '';
-  for (let i = 0; i < length; i++) {
-    password += charset.charAt(Math.floor(Math.random() * charset.length));
-  }
-  return password;
-}
-
-function generateToken(): string {
-  return crypto.randomBytes(20).toString('hex');
-}
-export async function adduser(
-  prevState: { status: string | null; error: string },
-  formData: FormData
-) {
-  const email = formData.get('email') as string;
-
-  if (!email) {
-    return { ...prevState, status: 'error', error: 'Email is required' };
-  }
-
-  if (!email.includes('@')) {
-    return { ...prevState, status: 'error', error: 'Email is invalid' };
-  }
-
-  const user = await prisma.user.findUnique({ where: { email } });
-
-  if (user) {
-    return { ...prevState, status: 'error', error: 'Email is already in use' };
-  }
-
-  const registrationToken = generateToken();
-
-  const password = generateRandomPassword();
-  const hashedPassword = await bcryptjs.hash(password, 10); 
-
-  await prisma.user.create({
-    data: {
-      name: email.split('@')[0],
-      email,
-      role: 'USER',
-      password: hashedPassword,
-      registrationToken,
-      registrationTokenExpires: new Date(Date.now() + 3600000),
-    },
-  });
-
-  const registrationUrl = `http://localhost:3000/register?token=${registrationToken}`;
-
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: 'abrarprince471@gmail.com', 
-      pass: 'dgbd tutm avnp gziv',
-    },
-  });
-
-  const mailOptions = {
-    from: 'your-email@gmail.com',
-    to: email,
-    subject: 'Complete Your Registration',
-    text: `Hi ${email.split('@')[0]},\n\nPlease complete your registration by setting your password.\n\nClick the link below to set your password:\n\n${registrationUrl}\n\nThis link is valid for one hour.\n\nBest regards,\nYour Service Team`,
-    html: `
-      <p>Hi ${email.split('@')[0]},</p>
-      <p>Please complete your registration by setting your password.</p>
-      <p>Click the link below to set your password:</p>
-      <p><a href="${registrationUrl}">${registrationUrl}</a></p>
-      <p>This link is valid for one hour.</p>
-      <p>Best regards,<br/>Your Service Team</p>
-    `,
-  };
-
-  try {
-    await transporter.sendMail(mailOptions);
-  } catch (error) {
-    return {
-      ...prevState,
-      status: 'error',
-      error: 'Error sending email: ' + (error instanceof Error ? error.message : 'Unknown error'),
-    };
-  }
-
-  return { ...prevState, status: 'ok', error: '' };
-}
 
 
 
@@ -548,3 +386,155 @@ export async function markAttendance(userId: string, data: string) {
   return getAttendanceDetails(userId);
 }
 
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000'; // Define your frontend URL
+
+// Action to send the password reset email
+export async function sendPasswordEmail(reqBody: { email: string }) {
+  const { email } = reqBody;
+
+  if (!email) {
+    throw new Error('Email is required');
+  }
+
+  try {
+    // Generate a token using JWT
+    const token = jwt.sign({ email }, JWT_SECRET, { expiresIn: '1h' });
+
+    // Create a Nodemailer transporter
+    const transporter = nodemailer.createTransport({
+      service: 'Gmail', // Use your email service provider
+      auth: {
+        user: 'abrarprince471@gmail.com', 
+        pass: 'dgbd tutm avnp gziv',
+      },
+    });
+
+    // Email content
+    const mailOptions = {
+      from: process.env.EMAIL_FROM || 'no-reply@example.com',
+      to: email,
+      subject: 'Set Your Password',
+      html: `
+        <p>Click the link below to set your password:</p>
+        <a href="${FRONTEND_URL}/set-password?token=${token}">Set Password</a>
+        <p>This link will expire in 1 hour.</p>
+      `,
+    };
+
+    // Send email
+    await transporter.sendMail(mailOptions);
+
+    return { message: 'Email sent successfully!' };
+  } catch (error) {
+    console.error('Error sending email:', error);
+    throw new Error('Failed to send email. Please try again later.');
+  }
+}
+
+// Action to add a user
+export async function addUser(prevState: { status: string | null; error: string, message: string }, formData: FormData) {
+  const email = formData.get('email') as string;
+  const name = formData.get('name') as string;
+  const phone = formData.get('phone') as string;
+  const address = formData.get('address') as string;
+  type Role = 'ADMIN' | 'USER'; // Define the Role type
+  const role = formData.get('role') as Role;
+
+
+  console.log("formData", formData);
+
+  if (!email || !name || !phone || !address || !role) {
+    return { ...prevState, status: 'error', error: 'All fields are required' };
+  }
+
+  const user = await prisma.user.findUnique({ where: { email } });
+
+  if (user) {
+    return { ...prevState, status: 'error', error: 'Email is already in use' };
+  }
+
+  // Generate a JWT token with the user's email for registration
+  const registrationToken = jwt.sign({ email }, JWT_SECRET, { expiresIn: '1h' });
+
+  await prisma.user.create({
+    data: {
+      name,
+      email,
+      role,
+      password: await bcryptjs.hash('defaultPassword', 10), // Add a default password
+      registrationToken,
+      registrationTokenExpires: new Date(Date.now() + 3600000),
+    },
+  });
+
+  const registrationUrl = `${FRONTEND_URL}/register?token=${registrationToken}`;
+
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: 'abrarprince471@gmail.com', 
+      pass: 'dgbd tutm avnp gziv',
+    },
+  });
+
+  const mailOptions = {
+    from: process.env.EMAIL_FROM || 'no-reply@example.com',
+    to: email,
+    subject: 'Complete Your Registration',
+    text: `Hi ${name},\n\nPlease complete your registration by setting your password.\n\nClick the link below to set your password:\n\n${registrationUrl}\n\nThis link is valid for one hour.\n\nBest regards,\nYour Service Team`,
+    html: `
+      <p>Hi ${name},</p>
+      <p>Please complete your registration by setting your password.</p>
+      <p>Click the link below to set your password:</p>
+      <p><a href="${registrationUrl}">${registrationUrl}</a></p>
+      <p>This link is valid for one hour.</p>
+      <p>Best regards,<br/>Your Service Team</p>
+    `,
+  };
+
+  try {
+    await transporter.sendMail(mailOptions);
+  } catch (error) {
+    return {
+      ...prevState,
+      status: 'error',
+      error: 'Error sending email: ' + (error instanceof Error ? error.message : 'Unknown error'),
+    };
+  }
+
+  return { ...prevState, status: 'ok', error: '', message: 'User added successfully!' };
+}
+
+// Action to set the password
+export async function setPassword(reqBody: { token: string; password: string; confirmPassword: string }) {
+  const { token, password, confirmPassword } = reqBody;
+
+  if (!token || !password || !confirmPassword) {
+    throw new Error('All fields are required');
+  }
+
+  if (password !== confirmPassword) {
+    throw new Error('Passwords do not match');
+  }
+
+  try {
+    // Verify the token using JWT
+    const decoded = jwt.verify(token, JWT_SECRET) as { email: string };
+    const { email } = decoded;
+
+    // Hash the password
+    const hashedPassword = await bcryptjs.hash(password, 10);
+
+    // Update the password in the database using Prisma
+    await prisma.user.update({
+      where: { email },
+      data: { password: hashedPassword },
+    });
+
+    return { message: 'Password updated successfully!' };
+  } catch (error) {
+    console.error('Error setting password:', error);
+    throw new Error('Invalid or expired token');
+  }
+}
