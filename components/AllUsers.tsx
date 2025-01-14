@@ -17,64 +17,107 @@ const UserPage = () => {
     },
   })
   return (
-    <div className="user-page">
-      <h1>Add User</h1>
-      <form action={action} >
+    <div className="user-page" style={{ padding: '20px', backgroundColor: '#f4f4f4', borderRadius: '8px' }}>
+      <h1 style={{ textAlign: 'center', color: '#333' }}>Add User</h1>
+      <form action={action} style={{ display: 'flex', gap: '15px', maxWidth: '100%', margin: 'auto' }}>
         <div>
-          <label htmlFor="name">Name</label>
+          <label htmlFor="name" style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Name</label>
           <input
             type="text"
             id="name"
             name="name"
             required
+            style={{
+              width: '100%',
+              padding: '10px',
+              border: '1px solid #ccc',
+              borderRadius: '4px',
+              fontSize: '16px'
+            }}
           />
         </div>
         <div>
-          <label htmlFor="email">Email</label>
+          <label htmlFor="email" style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Email</label>
           <input
             type="email"
             id="email"
             name="email"
-
+            style={{
+              width: '100%',
+              padding: '10px',
+              border: '1px solid #ccc',
+              borderRadius: '4px',
+              fontSize: '16px'
+            }}
           />
         </div>
         <div>
-          <label htmlFor="phone">Phone</label>
+          <label htmlFor="phone" style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Phone</label>
           <input
             type="text"
             id="phone"
             name="phone"
-
+            style={{
+              width: '100%',
+              padding: '10px',
+              border: '1px solid #ccc',
+              borderRadius: '4px',
+              fontSize: '16px'
+            }}
           />
         </div>
         <div>
-          <label htmlFor="address">Address</label>
+          <label htmlFor="address" style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Address</label>
           <input
             type="text"
             id="address"
             name="address"
-
+            style={{
+              width: '100%',
+              padding: '10px',
+              border: '1px solid #ccc',
+              borderRadius: '4px',
+              fontSize: '16px'
+            }}
           />
         </div>
         <div>
-          <label htmlFor="role">Role</label>
+          <label htmlFor="role" style={{ display: 'block', fontWeight: 'bold', marginBottom: '5px' }}>Role</label>
           <select
-
             id="role"
             name="role"
-
+            style={{
+              width: '100%',
+              padding: '10px',
+              border: '1px solid #ccc',
+              borderRadius: '4px',
+              fontSize: '16px'
+            }}
           >
             <option value="USER">User</option>
             <option value="ADMIN">Admin</option>
             {/* Add other roles as needed */}
           </select>
         </div>
-        <button type="submit">{
-          isPending ? "Adding User..." : "Add User"
-        }</button>
+        <button
+          type="submit"
+          style={{
+            padding: '10px 20px',
+            backgroundColor: '#4CAF50',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            fontSize: '16px',
+            cursor: 'pointer',
+            marginTop: '15px'
+          }}
+        >
+          {isPending ? "Adding User..." : "Add User"}
+        </button>
       </form>
       <UserList />
     </div>
+
   );
 };
 
