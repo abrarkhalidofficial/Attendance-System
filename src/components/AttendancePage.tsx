@@ -26,12 +26,13 @@ import { format } from "date-fns";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Id } from "../../convex/_generated/dataModel";
+import { FaceVerification } from "./FaceVerification";
 
 export const AttendancePage = React.forwardRef<
   HTMLDivElement,
   Record<string, never>
 >(function AttendancePage(_props, ref) {
-  const { currentUser } = useAuth();
+  const { currentUser, updateProfile } = useAuth();
   const settings = useQuery(api.settings.getSettings);
   const activeSession = useQuery(
     api.attendance.getActiveSession,
@@ -50,6 +51,7 @@ export const AttendancePage = React.forwardRef<
     currentUser?.locationOptIn || false
   );
   const [elapsedTime, setElapsedTime] = useState("00:00:00");
+  const [faceOpen, setFaceOpen] = useState(false);
 
   // Update current time every second
   useEffect(() => {
@@ -119,6 +121,52 @@ export const AttendancePage = React.forwardRef<
       });
       setNotes("");
       toast.success("Clocked in successfully!");
+    } catch (e: any) {
+      toast.error(e?.message || "Clock in failed");
+    }
+  };
+
+  const handleClockInVerified = async () => {
+    if (!currentUser) return;
+
+    let location:
+      | {
+          latitude: number;
+          longitude: number;
+          accuracy: number;
+          timestamp: string;
+        }
+      | undefined;
+    if (useLocation && currentUser.locationOptIn) {
+      try {
+        const position = await new Promise<GeolocationPosition>(
+          (resolve, reject) => {
+            navigator.geolocation.getCurrentPosition(resolve, reject);
+          }
+        );
+        location = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy,
+          timestamp: new Date().toISOString(),
+        };
+      } catch (error) {
+        toast.error("Could not get location. Clocking in without location.");
+      }
+    }
+
+    try {
+      await clockInMutation({
+        userId: currentUser.id as any,
+        deviceFingerprint: navigator.userAgent,
+        ipAddress: "192.168.1.1",
+        location,
+        notes: notes.trim() || undefined,
+        faceVerified: true,
+        isRemote: !location || (settings?.officeLocations?.length || 0) === 0,
+      });
+      setNotes("");
+      toast.success("Clocked in with face verification!");
     } catch (e: any) {
       toast.error(e?.message || "Clock in failed");
     }
@@ -277,7 +325,7 @@ export const AttendancePage = React.forwardRef<
                 )}
               </div>
 
-              <Button onClick={handleClockIn} className="w-full">
+              <Button onClick={settings?.requireFaceVerification ? () => setFaceOpen(true) : handleClockIn} className="w-full">
                 <ClockInIcon className="mr-2 h-4 w-4" />
                 Clock In
               </Button>
@@ -384,6 +432,15 @@ export const AttendancePage = React.forwardRef<
           </div>
         </CardContent>
       </Card>
+      <FaceVerification
+        open={faceOpen}
+        onOpenChange={setFaceOpen}
+        existingEmbedding={currentUser?.faceEmbedding}
+        onVerified={handleClockInVerified}
+        onEnroll={async (embedding) => {
+          await updateProfile({ faceEmbedding: embedding });
+        }}
+      />
     </div>
   );
 });
