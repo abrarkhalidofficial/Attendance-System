@@ -109,156 +109,240 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     workingDaysPerWeek: 5
   });
 
-  // Initialize data from localStorage or create mock data
-  useEffect(() => {
-    const loadData = () => {
-      const storedUsers = localStorage.getItem('users');
-      const storedSessions = localStorage.getItem('attendanceSessions');
-      const storedLeaveRequests = localStorage.getItem('leaveRequests');
-      const storedLeaveBalances = localStorage.getItem('leaveBalances');
-      const storedLeaveTypes = localStorage.getItem('leaveTypes');
-      const storedProjects = localStorage.getItem('projects');
-      const storedTasks = localStorage.getItem('tasks');
-      const storedTimeEntries = localStorage.getItem('timeEntries');
-      const storedAuditLogs = localStorage.getItem('auditLogs');
-      const storedNotifications = localStorage.getItem('notifications');
-      const storedSettings = localStorage.getItem('settings');
+  // Replace localStorage mocks with Convex queries
+  const qUsers = useQuery(api.users.getUsers) ?? [];
+  const qAttendanceSessions = useQuery(api.attendance.getAttendanceSessions) ?? [];
+  const qLeaveRequests = useQuery(api.leaves.getLeaveRequests) ?? [];
+  const qLeaveBalances = useQuery(api.leaves.getLeaveBalances) ?? [];
+  const qLeaveTypes = useQuery(api.leaves.getLeaveTypes) ?? [];
+  const qProjects = useQuery(api.projects.getProjects) ?? [];
+  const qTasks = useQuery(api.projects.getTasks) ?? [];
+  const qTimeEntries = useQuery(api.timeEntries.getTimeEntries) ?? [];
+  const qAuditLogs = useQuery(api.auditLogs.getAuditLogs) ?? [];
+  const qNotifications = useQuery(api.notifications.getNotifications) ?? [];
+  const qSettings = useQuery(api.settings.getSettings);
 
-      if (!storedUsers) {
-        // Initialize with mock data
-        const mockData = initializeMockData();
-        setUsers(mockData.users);
-        setAttendanceSessions(mockData.attendanceSessions);
-        setLeaveRequests(mockData.leaveRequests);
-        setLeaveBalances(mockData.leaveBalances);
-        setLeaveTypes(mockData.leaveTypes);
-        setProjects(mockData.projects);
-        setTasks(mockData.tasks);
-        setTimeEntries(mockData.timeEntries);
-        setAuditLogs(mockData.auditLogs);
-        setNotifications(mockData.notifications);
-        setSettings(mockData.settings);
+  // Map Convex docs to frontend types
+  const mapUser = (u: any): User => ({
+    id: u._id,
+    email: u.email,
+    password: '',
+    name: u.name,
+    role: u.role,
+    avatar: u.avatar,
+    department: u.department,
+    position: u.position,
+    isActive: u.isActive,
+    faceEmbedding: u.faceEmbedding,
+    locationOptIn: u.locationOptIn ?? false,
+    createdAt: new Date(u._creationTime).toISOString(),
+    updatedAt: new Date(u._creationTime).toISOString(),
+  });
+  const mapSession = (s: any): AttendanceSession => ({
+    id: s._id,
+    userId: s.userId,
+    clockIn: s.clockIn,
+    clockOut: s.clockOut,
+    deviceFingerprint: s.deviceFingerprint,
+    ipAddress: s.ipAddress,
+    location: s.location,
+    notes: s.notes,
+    faceVerified: s.faceVerified,
+    status: s.status,
+    totalHours: s.totalHours,
+    isRemote: s.isRemote,
+  });
+  const mapLeaveType = (lt: any): LeaveType => ({
+    id: lt._id,
+    name: lt.name,
+    color: lt.color,
+    defaultBalance: lt.defaultBalance,
+  });
+  const mapLeaveRequest = (lr: any): LeaveRequest => ({
+    id: lr._id,
+    userId: lr.userId,
+    leaveTypeId: lr.leaveTypeId,
+    startDate: lr.startDate,
+    endDate: lr.endDate,
+    isHalfDay: lr.isHalfDay,
+    reason: lr.reason,
+    attachments: lr.attachments ?? [],
+    status: lr.status,
+    approvedBy: lr.approvedBy,
+    approvedAt: lr.approvedAt,
+    comments: [],
+    createdAt: new Date(lr._creationTime).toISOString(),
+  });
+  const mapLeaveBalance = (lb: any): LeaveBalance => ({
+    userId: lb.userId,
+    leaveTypeId: lb.leaveTypeId,
+    balance: lb.balance,
+    used: lb.used,
+    carryover: lb.carryover,
+  });
+  const mapProject = (p: any): Project => ({
+    id: p._id,
+    name: p.name,
+    description: p.description,
+    client: p.client,
+    isBillable: p.isBillable,
+    hourlyRate: p.hourlyRate,
+    status: p.status,
+    createdBy: p.createdBy,
+    createdAt: new Date(p._creationTime).toISOString(),
+    teamMembers: p.teamMembers ?? [],
+  });
+  const mapTask = (t: any): Task => ({
+    id: t._id,
+    projectId: t.projectId,
+    title: t.title,
+    description: t.description,
+    status: t.status,
+    assignedTo: t.assignedTo,
+    createdBy: t.createdBy,
+    estimatedHours: t.estimatedHours,
+    actualHours: t.actualHours ?? 0,
+    dueDate: t.dueDate,
+    priority: t.priority,
+    attachments: t.attachments ?? [],
+    subtasks: t.subtasks ?? [],
+    createdAt: new Date(t._creationTime).toISOString(),
+    updatedAt: new Date(t._creationTime).toISOString(),
+  });
+  const mapTimeEntry = (te: any): TimeEntry => ({
+    id: te._id,
+    userId: te.userId,
+    projectId: te.projectId,
+    taskId: te.taskId,
+    sessionId: te.sessionId,
+    hours: te.hours,
+    description: te.description,
+    date: te.date,
+    createdAt: new Date(te._creationTime).toISOString(),
+  });
+  const mapNotification = (n: any): Notification => ({
+    id: n._id,
+    userId: n.userId,
+    type: n.type,
+    title: n.title,
+    message: n.message,
+    read: n.read,
+    createdAt: new Date(n._creationTime).toISOString(),
+    actionUrl: n.actionUrl,
+  });
+  const mapAuditLog = (al: any): AuditLog => ({
+    id: al._id,
+    userId: al.userId,
+    action: al.action,
+    entityType: al.entityType,
+    entityId: al.entityId,
+    changes: al.changes,
+    timestamp: new Date(al._creationTime).toISOString(),
+    ipAddress: al.ipAddress,
+  });
 
-        // Save to localStorage
-        localStorage.setItem('users', JSON.stringify(mockData.users));
-        localStorage.setItem('attendanceSessions', JSON.stringify(mockData.attendanceSessions));
-        localStorage.setItem('leaveRequests', JSON.stringify(mockData.leaveRequests));
-        localStorage.setItem('leaveBalances', JSON.stringify(mockData.leaveBalances));
-        localStorage.setItem('leaveTypes', JSON.stringify(mockData.leaveTypes));
-        localStorage.setItem('projects', JSON.stringify(mockData.projects));
-        localStorage.setItem('tasks', JSON.stringify(mockData.tasks));
-        localStorage.setItem('timeEntries', JSON.stringify(mockData.timeEntries));
-        localStorage.setItem('auditLogs', JSON.stringify(mockData.auditLogs));
-        localStorage.setItem('notifications', JSON.stringify(mockData.notifications));
-        localStorage.setItem('settings', JSON.stringify(mockData.settings));
-      } else {
-        setUsers(JSON.parse(storedUsers));
-        setAttendanceSessions(JSON.parse(storedSessions || '[]'));
-        setLeaveRequests(JSON.parse(storedLeaveRequests || '[]'));
-        setLeaveBalances(JSON.parse(storedLeaveBalances || '[]'));
-        setLeaveTypes(JSON.parse(storedLeaveTypes || '[]'));
-        setProjects(JSON.parse(storedProjects || '[]'));
-        setTasks(JSON.parse(storedTasks || '[]'));
-        setTimeEntries(JSON.parse(storedTimeEntries || '[]'));
-        setAuditLogs(JSON.parse(storedAuditLogs || '[]'));
-        setNotifications(JSON.parse(storedNotifications || '[]'));
-        setSettings(JSON.parse(storedSettings || JSON.stringify(settings)));
-      }
-    };
+  // Hydrate local state from Convex
+  useEffect(() => { if (qUsers) setUsers(qUsers.map(mapUser)); }, [qUsers]);
+  useEffect(() => { if (qAttendanceSessions) setAttendanceSessions(qAttendanceSessions.map(mapSession)); }, [qAttendanceSessions]);
+  useEffect(() => { if (qLeaveRequests) setLeaveRequests(qLeaveRequests.map(mapLeaveRequest)); }, [qLeaveRequests]);
+  useEffect(() => { if (qLeaveBalances) setLeaveBalances(qLeaveBalances.map(mapLeaveBalance)); }, [qLeaveBalances]);
+  useEffect(() => { if (qLeaveTypes) setLeaveTypes(qLeaveTypes.map(mapLeaveType)); }, [qLeaveTypes]);
+  useEffect(() => { if (qProjects) setProjects(qProjects.map(mapProject)); }, [qProjects]);
+  useEffect(() => { if (qTasks) setTasks(qTasks.map(mapTask)); }, [qTasks]);
+  useEffect(() => { if (qTimeEntries) setTimeEntries(qTimeEntries.map(mapTimeEntry)); }, [qTimeEntries]);
+  useEffect(() => { if (qNotifications) setNotifications(qNotifications.map(mapNotification)); }, [qNotifications]);
+  useEffect(() => { if (qAuditLogs) setAuditLogs(qAuditLogs.map(mapAuditLog)); }, [qAuditLogs]);
+  useEffect(() => { if (qSettings) setSettings(qSettings as CompanySettings); }, [qSettings]);
 
-    loadData();
-  }, []);
+  // Convex mutations
+  const mCreateUser = useMutation(api.users.createUser);
+  const mUpdateUser = useMutation(api.users.updateUser);
+  const mDeleteUser = useMutation(api.users.deleteUser);
 
-  // Save to localStorage whenever data changes
-  useEffect(() => {
-    if (users.length > 0) {
-      localStorage.setItem('users', JSON.stringify(users));
-    }
-  }, [users]);
+  const mClockIn = useMutation(api.attendance.clockIn);
+  const mClockOut = useMutation(api.attendance.clockOut);
+  const mUpdateSession = useMutation(api.attendance.updateAttendanceSession);
 
-  useEffect(() => {
-    localStorage.setItem('attendanceSessions', JSON.stringify(attendanceSessions));
-  }, [attendanceSessions]);
+  const mCreateLeaveRequest = useMutation(api.leaves.createLeaveRequest);
+  const mUpdateLeaveRequest = useMutation(api.leaves.updateLeaveRequest);
+  const mAddLeaveComment = useMutation(api.leaves.addLeaveComment);
 
-  useEffect(() => {
-    localStorage.setItem('leaveRequests', JSON.stringify(leaveRequests));
-  }, [leaveRequests]);
+  const mCreateProject = useMutation(api.projects.createProject);
+  const mUpdateProject = useMutation(api.projects.updateProject);
+  const mDeleteProject = useMutation(api.projects.deleteProject);
 
-  useEffect(() => {
-    localStorage.setItem('leaveBalances', JSON.stringify(leaveBalances));
-  }, [leaveBalances]);
+  const mCreateTask = useMutation(api.projects.createTask);
+  const mUpdateTask = useMutation(api.projects.updateTask);
+  const mDeleteTask = useMutation(api.projects.deleteTask);
 
-  useEffect(() => {
-    localStorage.setItem('projects', JSON.stringify(projects));
-  }, [projects]);
+  const mCreateTimeEntry = useMutation(api.timeEntries.createTimeEntry);
 
-  useEffect(() => {
-    localStorage.setItem('tasks', JSON.stringify(tasks));
-  }, [tasks]);
+  const mCreateNotification = useMutation(api.notifications.createNotification);
+  const mMarkNotificationAsRead = useMutation(api.notifications.markNotificationAsRead);
+  const mMarkAllNotificationsAsRead = useMutation(api.notifications.markAllNotificationsAsRead);
 
-  useEffect(() => {
-    localStorage.setItem('timeEntries', JSON.stringify(timeEntries));
-  }, [timeEntries]);
+  const mCreateAuditLog = useMutation(api.auditLogs.createAuditLog);
 
-  useEffect(() => {
-    localStorage.setItem('notifications', JSON.stringify(notifications));
-  }, [notifications]);
+  const mUpdateSettings = useMutation(api.settings.updateSettings);
 
-  useEffect(() => {
-    localStorage.setItem('settings', JSON.stringify(settings));
-  }, [settings]);
-
-  // User operations
-  const addUser = (userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>) => {
-    const newUser: User = {
-      ...userData,
-      id: `user-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    setUsers([...users, newUser]);
+  // Override operations to use Convex
+  const addUser = async (userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>) => {
+    const id = await mCreateUser({
+      email: userData.email,
+      password: userData.password,
+      name: userData.name,
+      role: userData.role as any,
+      avatar: userData.avatar,
+      department: userData.department,
+      position: userData.position,
+      isActive: userData.isActive,
+      faceEmbedding: userData.faceEmbedding,
+      locationOptIn: userData.locationOptIn,
+    });
+    setUsers(prev => [...prev, { ...userData, id, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() } as User]);
   };
 
-  const updateUser = (id: string, updates: Partial<User>) => {
-    setUsers(users.map(u => u.id === id ? { ...u, ...updates, updatedAt: new Date().toISOString() } : u));
+  const updateUser = async (id: string, updates: Partial<User>) => {
+    await mUpdateUser({ id: id as any, ...updates });
+    setUsers(prev => prev.map(u => u.id === id ? { ...u, ...updates, updatedAt: new Date().toISOString() } : u));
   };
 
-  const deleteUser = (id: string) => {
-    setUsers(users.map(u => u.id === id ? { ...u, isActive: false } : u));
+  const deleteUser = async (id: string) => {
+    await mDeleteUser({ id: id as any });
+    setUsers(prev => prev.map(u => u.id === id ? { ...u, isActive: false } : u));
   };
 
-  // Attendance operations
-  const clockIn = (userId: string, data: Partial<AttendanceSession>) => {
-    const newSession: AttendanceSession = {
-      id: `session-${Date.now()}`,
+  const clockIn = async (userId: string, data: Partial<AttendanceSession>) => {
+    const newId = await mClockIn({
+      userId: userId as any,
+      deviceFingerprint: data.deviceFingerprint || 'web-browser',
+      ipAddress: data.ipAddress || '0.0.0.0',
+      location: data.location,
+      notes: data.notes,
+      faceVerified: data.faceVerified ?? false,
+      isRemote: data.isRemote ?? false,
+    });
+    setAttendanceSessions(prev => [...prev, {
+      id: newId,
       userId,
       clockIn: new Date().toISOString(),
       deviceFingerprint: data.deviceFingerprint || 'web-browser',
-      ipAddress: data.ipAddress || '192.168.1.1',
+      ipAddress: data.ipAddress || '0.0.0.0',
       location: data.location,
       notes: data.notes,
-      faceVerified: data.faceVerified || false,
+      faceVerified: data.faceVerified ?? false,
       status: 'active',
-      isRemote: data.isRemote || false,
-    };
-    setAttendanceSessions([...attendanceSessions, newSession]);
+      isRemote: data.isRemote ?? false,
+    }]);
   };
 
-  const clockOut = (sessionId: string, data?: Partial<AttendanceSession>) => {
-    setAttendanceSessions(attendanceSessions.map(s => {
+  const clockOut = async (sessionId: string, data?: Partial<AttendanceSession>) => {
+    await mClockOut({ id: sessionId as any });
+    setAttendanceSessions(prev => prev.map(s => {
       if (s.id === sessionId) {
         const clockOut = new Date().toISOString();
-        const clockInTime = new Date(s.clockIn).getTime();
-        const clockOutTime = new Date(clockOut).getTime();
-        const totalHours = (clockOutTime - clockInTime) / (1000 * 60 * 60);
-        
-        return {
-          ...s,
-          clockOut,
-          totalHours: Math.round(totalHours * 100) / 100,
-          status: 'completed' as const,
-          ...data
-        };
+        const totalHours = (new Date(clockOut).getTime() - new Date(s.clockIn).getTime()) / (1000 * 60 * 60);
+        return { ...s, clockOut, totalHours: Math.round(totalHours * 100) / 100, status: 'completed', ...data };
       }
       return s;
     }));
@@ -268,133 +352,149 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     return attendanceSessions.find(s => s.userId === userId && s.status === 'active');
   };
 
-  const updateSession = (id: string, updates: Partial<AttendanceSession>) => {
-    setAttendanceSessions(attendanceSessions.map(s => s.id === id ? { ...s, ...updates } : s));
+  const updateSession = async (id: string, updates: Partial<AttendanceSession>) => {
+    await mUpdateSession({ id: id as any, ...updates });
+    setAttendanceSessions(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
   };
 
-  // Leave operations
-  const submitLeaveRequest = (request: Omit<LeaveRequest, 'id' | 'createdAt' | 'comments' | 'status'>) => {
-    const newRequest: LeaveRequest = {
-      ...request,
-      id: `leave-${Date.now()}`,
-      status: 'pending',
-      comments: [],
-      createdAt: new Date().toISOString(),
-    };
-    setLeaveRequests([...leaveRequests, newRequest]);
+  const submitLeaveRequest = async (request: Omit<LeaveRequest, 'id' | 'createdAt' | 'comments' | 'status'>) => {
+    const id = await mCreateLeaveRequest({
+      userId: request.userId as any,
+      leaveTypeId: request.leaveTypeId as any,
+      startDate: request.startDate,
+      endDate: request.endDate,
+      isHalfDay: request.isHalfDay,
+      reason: request.reason,
+      attachments: request.attachments,
+    });
+    setLeaveRequests(prev => [...prev, { ...request, id, status: 'pending', comments: [], createdAt: new Date().toISOString() }]);
   };
 
-  const updateLeaveRequest = (id: string, updates: Partial<LeaveRequest>) => {
-    setLeaveRequests(leaveRequests.map(r => r.id === id ? { ...r, ...updates } : r));
+  const updateLeaveRequest = async (id: string, updates: Partial<LeaveRequest>) => {
+    await mUpdateLeaveRequest({ id: id as any, ...updates });
+    setLeaveRequests(prev => prev.map(r => r.id === id ? { ...r, ...updates } : r));
   };
 
-  const addLeaveComment = (requestId: string, userId: string, text: string) => {
-    setLeaveRequests(leaveRequests.map(r => {
+  const addLeaveComment = async (requestId: string, userId: string, text: string) => {
+    await mAddLeaveComment({ leaveRequestId: requestId as any, userId: userId as any, text });
+    setLeaveRequests(prev => prev.map(r => {
       if (r.id === requestId) {
-        return {
-          ...r,
-          comments: [...r.comments, {
-            id: `comment-${Date.now()}`,
-            userId,
-            text,
-            createdAt: new Date().toISOString()
-          }]
-        };
+        return { ...r, comments: [...r.comments, { id: `comment-${Date.now()}`, userId, text, createdAt: new Date().toISOString() }] };
       }
       return r;
     }));
   };
 
-  // Project operations
-  const addProject = (projectData: Omit<Project, 'id' | 'createdAt'>) => {
-    const newProject: Project = {
-      ...projectData,
-      id: `project-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-    };
-    setProjects([...projects, newProject]);
+  const addProject = async (project: Omit<Project, 'id' | 'createdAt'>) => {
+    const id = await mCreateProject({
+      name: project.name,
+      description: project.description,
+      client: project.client,
+      isBillable: project.isBillable,
+      hourlyRate: project.hourlyRate,
+      status: project.status as any,
+      createdBy: project.createdBy as any,
+      teamMembers: project.teamMembers?.map(tm => tm as any),
+    });
+    setProjects(prev => [...prev, { ...project, id, createdAt: new Date().toISOString() }]);
   };
 
-  const updateProject = (id: string, updates: Partial<Project>) => {
-    setProjects(projects.map(p => p.id === id ? { ...p, ...updates } : p));
+  const updateProject = async (id: string, updates: Partial<Project>) => {
+    await mUpdateProject({ id: id as any, ...updates });
+    setProjects(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
   };
 
-  const deleteProject = (id: string) => {
-    setProjects(projects.map(p => p.id === id ? { ...p, status: 'archived' as const } : p));
+  const deleteProject = async (id: string) => {
+    await mDeleteProject({ id: id as any });
+    setProjects(prev => prev.map(p => p.id === id ? { ...p, status: 'archived' } : p));
   };
 
-  // Task operations
-  const addTask = (taskData: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'actualHours' | 'subtasks'>) => {
-    const newTask: Task = {
-      ...taskData,
-      id: `task-${Date.now()}`,
-      actualHours: 0,
-      subtasks: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    setTasks([...tasks, newTask]);
+  const addTask = async (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'actualHours' | 'subtasks'>) => {
+    const id = await mCreateTask({
+      projectId: task.projectId as any,
+      title: task.title,
+      description: task.description,
+      status: task.status as any,
+      assignedTo: task.assignedTo ? (task.assignedTo as any) : undefined,
+      createdBy: task.createdBy as any,
+      estimatedHours: task.estimatedHours,
+      dueDate: task.dueDate,
+      priority: task.priority as any,
+      attachments: task.attachments,
+    });
+    setTasks(prev => [...prev, { ...task, id, actualHours: 0, subtasks: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }]);
   };
 
-  const updateTask = (id: string, updates: Partial<Task>) => {
-    setTasks(tasks.map(t => t.id === id ? { ...t, ...updates, updatedAt: new Date().toISOString() } : t));
+  const updateTask = async (id: string, updates: Partial<Task>) => {
+    await mUpdateTask({ id: id as any, ...updates });
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, ...updates, updatedAt: new Date().toISOString() } : t));
   };
 
-  const deleteTask = (id: string) => {
-    setTasks(tasks.filter(t => t.id !== id));
+  const deleteTask = async (id: string) => {
+    await mDeleteTask({ id: id as any });
+    setTasks(prev => prev.filter(t => t.id !== id));
   };
 
-  // Time entry operations
-  const addTimeEntry = (entryData: Omit<TimeEntry, 'id' | 'createdAt'>) => {
-    const newEntry: TimeEntry = {
-      ...entryData,
-      id: `entry-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-    };
-    setTimeEntries([...timeEntries, newEntry]);
-
-    // Update task actual hours if task is linked
-    if (entryData.taskId) {
-      setTasks(tasks.map(t => {
-        if (t.id === entryData.taskId) {
-          return { ...t, actualHours: t.actualHours + entryData.hours };
-        }
-        return t;
-      }));
+  const addTimeEntry = async (entry: Omit<TimeEntry, 'id' | 'createdAt'>) => {
+    const id = await mCreateTimeEntry({
+      userId: entry.userId as any,
+      projectId: entry.projectId as any,
+      taskId: entry.taskId ? (entry.taskId as any) : undefined,
+      sessionId: entry.sessionId ? (entry.sessionId as any) : undefined,
+      hours: entry.hours,
+      description: entry.description,
+      date: entry.date,
+    });
+    setTimeEntries(prev => [...prev, { ...entry, id, createdAt: new Date().toISOString() }]);
+    if (entry.taskId) {
+      setTasks(prev => prev.map(t => t.id === entry.taskId ? { ...t, actualHours: (t.actualHours || 0) + entry.hours } : t));
     }
   };
 
-  // Notification operations
-  const addNotification = (notificationData: Omit<Notification, 'id' | 'createdAt'>) => {
-    const newNotification: Notification = {
-      ...notificationData,
-      id: `notif-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-    };
-    setNotifications([...notifications, newNotification]);
+  const addNotification = async (notification: Omit<Notification, 'id' | 'createdAt'>) => {
+    await mCreateNotification({
+      userId: notification.userId as any,
+      type: notification.type as any,
+      title: notification.title,
+      message: notification.message,
+      actionUrl: notification.actionUrl,
+    });
+    setNotifications(prev => [...prev, { ...notification, id: `notif-${Date.now()}`, createdAt: new Date().toISOString() }]);
   };
 
-  const markNotificationRead = (id: string) => {
-    setNotifications(notifications.map(n => n.id === id ? { ...n, read: true } : n));
+  const markNotificationRead = async (id: string) => {
+    await mMarkNotificationAsRead({ id: id as any });
+    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
   };
 
-  const markAllNotificationsRead = (userId: string) => {
-    setNotifications(notifications.map(n => n.userId === userId ? { ...n, read: true } : n));
+  const markAllNotificationsRead = async (userId: string) => {
+    await mMarkAllNotificationsAsRead({ userId: userId as any });
+    setNotifications(prev => prev.map(n => n.userId === userId ? { ...n, read: true } : n));
   };
 
-  // Audit operations
-  const addAuditLog = (logData: Omit<AuditLog, 'id' | 'timestamp'>) => {
-    const newLog: AuditLog = {
-      ...logData,
-      id: `audit-${Date.now()}`,
-      timestamp: new Date().toISOString(),
-    };
-    setAuditLogs([...auditLogs, newLog]);
+  const addAuditLog = async (log: Omit<AuditLog, 'id' | 'timestamp'>) => {
+    await mCreateAuditLog({
+      userId: log.userId as any,
+      action: log.action,
+      entityType: log.entityType,
+      entityId: log.entityId,
+      changes: log.changes,
+      ipAddress: log.ipAddress || '0.0.0.0',
+    });
+    setAuditLogs(prev => [...prev, { ...log, id: `audit-${Date.now()}`, timestamp: new Date().toISOString() }]);
   };
 
-  // Settings
-  const updateSettings = (updates: Partial<CompanySettings>) => {
-    setSettings({ ...settings, ...updates });
+  const updateSettings = async (updates: Partial<CompanySettings>) => {
+    await mUpdateSettings({
+      allowSelfRegistration: updates.allowSelfRegistration,
+      requireFaceVerification: updates.requireFaceVerification,
+      enableGeofencing: updates.enableGeofencing,
+      officeLocations: updates.officeLocations,
+      overtimeRules: updates.overtimeRules,
+      workingHoursPerDay: updates.workingHoursPerDay,
+      workingDaysPerWeek: updates.workingDaysPerWeek,
+    });
+    setSettings(prev => ({ ...prev, ...updates }));
   };
 
   return (
@@ -439,288 +539,3 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     </DataContext.Provider>
   );
 };
-
-/*
-// Convex queries (server of record)
-const qUsers = useQuery(api.users.getUsers) ?? [];
-const qAttendanceSessions = useQuery(api.attendance.getAttendanceSessions) ?? [];
-const qLeaveRequests = useQuery(api.leaves.getLeaveRequests) ?? [];
-const qLeaveBalances = useQuery(api.leaves.getLeaveBalances) ?? [];
-const qLeaveTypes = useQuery(api.leaves.getLeaveTypes) ?? [];
-const qProjects = useQuery(api.projects.getProjects) ?? [];
-const qTasks = useQuery(api.projects.getTasks) ?? [];
-const qTimeEntries = useQuery(api.timeEntries.getTimeEntries) ?? [];
-const qAuditLogs = useQuery(api.auditLogs.getAuditLogs) ?? [];
-const qNotifications = useQuery(api.notifications.getNotifications) ?? [];
-const qSettings = useQuery(api.settings.getSettings);
-
-// Convex mutations
-const mCreateUser = useMutation(api.users.createUser);
-const mUpdateUser = useMutation(api.users.updateUser);
-const mDeleteUser = useMutation(api.users.deleteUser);
-
-const mClockIn = useMutation(api.attendance.clockIn);
-const mClockOut = useMutation(api.attendance.clockOut);
-const mUpdateSession = useMutation(api.attendance.updateAttendanceSession);
-
-const mUpdateSettings = useMutation(api.settings.updateSettings);
-
-// Mappers to frontend types
-const mapUser = (u: any): User => ({
-  id: u._id,
-  email: u.email,
-  password: u.password ?? '',
-  name: u.name,
-  role: u.role,
-  avatar: u.avatar,
-  department: u.department,
-  position: u.position,
-  isActive: u.isActive,
-  faceEmbedding: u.faceEmbedding,
-  locationOptIn: u.locationOptIn ?? false,
-  createdAt: new Date(u._creationTime).toISOString(),
-  updatedAt: new Date(u._creationTime).toISOString(),
-});
-
-const mapSession = (s: any): AttendanceSession => ({
-  id: s._id,
-  userId: s.userId,
-  clockIn: s.clockIn,
-  clockOut: s.clockOut,
-  deviceFingerprint: s.deviceFingerprint,
-  ipAddress: s.ipAddress,
-  location: s.location,
-  notes: s.notes,
-  faceVerified: s.faceVerified,
-  status: s.status,
-  totalHours: s.totalHours,
-  isRemote: s.isRemote,
-});
-
-const mapLeaveType = (lt: any): LeaveType => ({
-  id: lt._id,
-  name: lt.name,
-  color: lt.color,
-  defaultBalance: lt.defaultBalance,
-});
-
-const mapLeaveRequest = (lr: any): LeaveRequest => ({
-  id: lr._id,
-  userId: lr.userId,
-  leaveTypeId: lr.leaveTypeId,
-  startDate: lr.startDate,
-  endDate: lr.endDate,
-  isHalfDay: lr.isHalfDay,
-  reason: lr.reason,
-  attachments: lr.attachments ?? [],
-  status: lr.status,
-  approvedBy: lr.approvedBy,
-  approvedAt: lr.approvedAt,
-  comments: [],
-  createdAt: new Date(lr._creationTime).toISOString(),
-});
-
-const mapLeaveBalance = (lb: any): LeaveBalance => ({
-  userId: lb.userId,
-  leaveTypeId: lb.leaveTypeId,
-  balance: lb.balance,
-  used: lb.used,
-  carryover: lb.carryover,
-});
-
-const mapProject = (p: any): Project => ({
-  id: p._id,
-  name: p.name,
-  description: p.description,
-  client: p.client,
-  isBillable: p.isBillable,
-  hourlyRate: p.hourlyRate,
-  status: p.status,
-  createdBy: p.createdBy,
-  createdAt: new Date(p._creationTime).toISOString(),
-  teamMembers: p.teamMembers ?? [],
-});
-
-const mapTask = (t: any): Task => ({
-  id: t._id,
-  projectId: t.projectId,
-  title: t.title,
-  description: t.description,
-  status: t.status,
-  assignedTo: t.assignedTo,
-  createdBy: t.createdBy,
-  estimatedHours: t.estimatedHours,
-  actualHours: t.actualHours ?? 0,
-  dueDate: t.dueDate,
-  priority: t.priority,
-  attachments: t.attachments ?? [],
-  subtasks: t.subtasks ?? [],
-  createdAt: new Date(t._creationTime).toISOString(),
-  updatedAt: new Date(t._creationTime).toISOString(),
-});
-
-const mapTimeEntry = (te: any): TimeEntry => ({
-  id: te._id,
-  userId: te.userId,
-  projectId: te.projectId,
-  taskId: te.taskId,
-  sessionId: te.sessionId,
-  hours: te.hours,
-  description: te.description,
-  date: te.date,
-  createdAt: new Date(te._creationTime).toISOString(),
-});
-
-const mapNotification = (n: any): Notification => ({
-  id: n._id,
-  userId: n.userId,
-  type: n.type,
-  title: n.title,
-  message: n.message,
-  read: n.read,
-  createdAt: new Date(n._creationTime).toISOString(),
-  actionUrl: n.actionUrl,
-});
-
-const mapAuditLog = (al: any): AuditLog => ({
-  id: al._id,
-  userId: al.userId,
-  action: al.action,
-  entityType: al.entityType,
-  entityId: al.entityId,
-  changes: al.changes,
-  timestamp: new Date(al._creationTime).toISOString(),
-  ipAddress: al.ipAddress,
-});
-
-// Hydrate local state from Convex queries
-useEffect(() => {
-  if (qUsers) setUsers(qUsers.map(mapUser));
-}, [qUsers]);
-
-useEffect(() => {
-  if (qAttendanceSessions) setAttendanceSessions(qAttendanceSessions.map(mapSession));
-}, [qAttendanceSessions]);
-
-useEffect(() => {
-  if (qLeaveRequests) setLeaveRequests(qLeaveRequests.map(mapLeaveRequest));
-}, [qLeaveRequests]);
-
-useEffect(() => {
-  if (qLeaveBalances) setLeaveBalances(qLeaveBalances.map(mapLeaveBalance));
-}, [qLeaveBalances]);
-
-useEffect(() => {
-  if (qLeaveTypes) setLeaveTypes(qLeaveTypes.map(mapLeaveType));
-}, [qLeaveTypes]);
-
-useEffect(() => {
-  if (qProjects) setProjects(qProjects.map(mapProject));
-}, [qProjects]);
-
-useEffect(() => {
-  if (qTasks) setTasks(qTasks.map(mapTask));
-}, [qTasks]);
-
-useEffect(() => {
-  if (qTimeEntries) setTimeEntries(qTimeEntries.map(mapTimeEntry));
-}, [qTimeEntries]);
-
-useEffect(() => {
-  if (qNotifications) setNotifications(qNotifications.map(mapNotification));
-}, [qNotifications]);
-
-useEffect(() => {
-  if (qAuditLogs) setAuditLogs(qAuditLogs.map(mapAuditLog));
-}, [qAuditLogs]);
-
-useEffect(() => {
-  if (qSettings) setSettings(qSettings);
-}, [qSettings]);
-
-// Override user operations to use Convex
-const addUser = async (userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>) => {
-  const createdId = await mCreateUser({
-    email: userData.email,
-    password: userData.password,
-    name: userData.name,
-    role: userData.role as any,
-    avatar: userData.avatar,
-    department: userData.department,
-    position: userData.position,
-    isActive: userData.isActive,
-    faceEmbedding: userData.faceEmbedding,
-    locationOptIn: userData.locationOptIn,
-  });
-  // local hint for immediate UX
-  setUsers(prev => [...prev, { ...userData, id: createdId, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() } as User]);
-};
-
-const updateUser = async (id: string, updates: Partial<User>) => {
-  await mUpdateUser({ id: id as any, ...updates });
-  setUsers(prev => prev.map(u => u.id === id ? { ...u, ...updates, updatedAt: new Date().toISOString() } : u));
-};
-
-const deleteUser = async (id: string) => {
-  await mDeleteUser({ id: id as any });
-  setUsers(prev => prev.map(u => u.id === id ? { ...u, isActive: false } : u));
-};
-
-// Override attendance operations to use Convex
-const clockIn = async (userId: string, data: Partial<AttendanceSession>) => {
-  const newId = await mClockIn({
-    userId: userId as any,
-    deviceFingerprint: data.deviceFingerprint || 'web-browser',
-    ipAddress: data.ipAddress || '0.0.0.0',
-    location: data.location,
-    notes: data.notes,
-    faceVerified: data.faceVerified ?? false,
-    isRemote: data.isRemote ?? false,
-  });
-  setAttendanceSessions(prev => [...prev, {
-    id: newId,
-    userId,
-    clockIn: new Date().toISOString(),
-    deviceFingerprint: data.deviceFingerprint || 'web-browser',
-    ipAddress: data.ipAddress || '0.0.0.0',
-    location: data.location,
-    notes: data.notes,
-    faceVerified: data.faceVerified ?? false,
-    status: 'active',
-    isRemote: data.isRemote ?? false,
-  }]);
-};
-
-const clockOut = async (sessionId: string, data?: Partial<AttendanceSession>) => {
-  await mClockOut({ id: sessionId as any });
-  setAttendanceSessions(prev => prev.map(s => {
-    if (s.id === sessionId) {
-      const clockOut = new Date().toISOString();
-      const clockInTime = new Date(s.clockIn).getTime();
-      const clockOutTime = new Date(clockOut).getTime();
-      const totalHours = (clockOutTime - clockInTime) / (1000 * 60 * 60);
-      return { ...s, clockOut, totalHours: Math.round(totalHours * 100) / 100, status: 'completed', ...data };
-    }
-    return s;
-  }));
-};
-
-const updateSession = async (id: string, updates: Partial<AttendanceSession>) => {
-  await mUpdateSession({ id: id as any, ...updates });
-  setAttendanceSessions(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
-};
-
-// Override settings update to use Convex
-const updateSettings = async (updates: Partial<CompanySettings>) => {
-  await mUpdateSettings({
-    allowSelfRegistration: updates.allowSelfRegistration,
-    requireFaceVerification: updates.requireFaceVerification,
-    enableGeofencing: updates.enableGeofencing,
-    officeLocations: updates.officeLocations,
-    overtimeRules: updates.overtimeRules,
-    workingHoursPerDay: updates.workingHoursPerDay,
-    workingDaysPerWeek: updates.workingDaysPerWeek,
-  });
-  setSettings(prev => ({ ...prev, ...updates }));
-};
-*/
