@@ -1,20 +1,46 @@
-import React, { useState } from 'react';
-import { useAuth } from '../hooks/useAuth';
-import { useData } from '../contexts/DataContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Button } from './ui/button';
-import { Badge } from './ui/badge';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
-import { Avatar, AvatarFallback } from './ui/avatar';
-import { Switch } from './ui/switch';
-import { toast } from 'sonner@2.0.3';
-import { Plus, Edit, UserX, UserCheck, Shield, User as UserIcon } from 'lucide-react';
-import { UserRole } from '../types';
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '../../convex/_generated/api';
+import React, { useState } from "react";
+import { useAuth } from "../hooks/useAuth";
+import { useData } from "../contexts/DataContext";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "./ui/card";
+import { Button } from "./ui/button";
+import { Badge } from "./ui/badge";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./ui/dialog";
+import { Avatar, AvatarFallback } from "./ui/avatar";
+import { Switch } from "./ui/switch";
+import { toast } from "sonner";
+import {
+  Plus,
+  Edit,
+  UserX,
+  UserCheck,
+  Shield,
+  User as UserIcon,
+} from "lucide-react";
+import { UserRole } from "../types";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
 
 export const UsersPage: React.FC = () => {
   const { currentUser } = useAuth();
@@ -26,17 +52,17 @@ export const UsersPage: React.FC = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<string | null>(null);
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    name: '',
-    role: 'employee' as UserRole,
-    department: '',
-    position: '',
+    email: "",
+    password: "",
+    name: "",
+    role: "employee" as UserRole,
+    department: "",
+    position: "",
     isActive: true,
     locationOptIn: false,
   });
 
-  if (!currentUser || currentUser.role !== 'admin') {
+  if (!currentUser || currentUser.role !== "admin") {
     return <div>Access denied</div>;
   }
 
@@ -55,7 +81,7 @@ export const UsersPage: React.FC = () => {
         isActive: formData.isActive,
         locationOptIn: formData.locationOptIn,
       });
-      toast.success('User updated!');
+      toast.success("User updated!");
     } else {
       await createUser({
         email: formData.email,
@@ -67,7 +93,7 @@ export const UsersPage: React.FC = () => {
         isActive: formData.isActive,
         locationOptIn: formData.locationOptIn,
       });
-      toast.success('User created!');
+      toast.success("User created!");
     }
 
     resetForm();
@@ -75,12 +101,12 @@ export const UsersPage: React.FC = () => {
 
   const resetForm = () => {
     setFormData({
-      email: '',
-      password: '',
-      name: '',
-      role: 'employee',
-      department: '',
-      position: '',
+      email: "",
+      password: "",
+      name: "",
+      role: "employee",
+      department: "",
+      position: "",
       isActive: true,
       locationOptIn: false,
     });
@@ -93,11 +119,11 @@ export const UsersPage: React.FC = () => {
     if (user) {
       setFormData({
         email: user.email,
-        password: '',
+        password: "",
         name: user.name,
         role: user.role,
-        department: user.department || '',
-        position: user.position || '',
+        department: user.department || "",
+        position: user.position || "",
         isActive: user.isActive,
         locationOptIn: user.locationOptIn,
       });
@@ -107,20 +133,24 @@ export const UsersPage: React.FC = () => {
   };
 
   const handleToggleActive = async (userId: string) => {
-    const user = users.find(u => u._id === userId);
+    const user = users.find((u) => u._id === userId);
     if (user) {
       await updateUserMutation({ id: userId as any, isActive: !user.isActive });
-      toast.success(user.isActive ? 'User deactivated' : 'User activated');
+      toast.success(user.isActive ? "User deactivated" : "User activated");
     }
   };
 
   const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase();
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
   };
 
   const getRoleIcon = (role: UserRole) => {
-    if (role === 'admin') return <Shield className="h-4 w-4" />;
-    if (role === 'manager') return <UserCheck className="h-4 w-4" />;
+    if (role === "admin") return <Shield className="h-4 w-4" />;
+    if (role === "manager") return <UserCheck className="h-4 w-4" />;
     return <UserIcon className="h-4 w-4" />;
   };
 
@@ -133,16 +163,25 @@ export const UsersPage: React.FC = () => {
         </div>
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => { resetForm(); setDialogOpen(true); }}>
+            <Button
+              onClick={() => {
+                resetForm();
+                setDialogOpen(true);
+              }}
+            >
               <Plus className="mr-2 h-4 w-4" />
               Add User
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>{editingUser ? 'Edit User' : 'Add New User'}</DialogTitle>
+              <DialogTitle>
+                {editingUser ? "Edit User" : "Add New User"}
+              </DialogTitle>
               <DialogDescription>
-                {editingUser ? 'Update user information' : 'Create a new user account'}
+                {editingUser
+                  ? "Update user information"
+                  : "Create a new user account"}
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -151,7 +190,9 @@ export const UsersPage: React.FC = () => {
                 <Input
                   id="name"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                   required
                 />
               </div>
@@ -161,7 +202,9 @@ export const UsersPage: React.FC = () => {
                   id="email"
                   type="email"
                   value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
                   required
                 />
               </div>
@@ -171,7 +214,9 @@ export const UsersPage: React.FC = () => {
                   id="password"
                   type="password"
                   value={formData.password}
-                  onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, password: e.target.value })
+                  }
                   required={!editingUser}
                 />
               </div>
@@ -180,7 +225,9 @@ export const UsersPage: React.FC = () => {
                   <Label htmlFor="role">Role</Label>
                   <Select
                     value={formData.role}
-                    onValueChange={(value: UserRole) => setFormData({ ...formData, role: value })}
+                    onValueChange={(value: UserRole) =>
+                      setFormData({ ...formData, role: value })
+                    }
                   >
                     <SelectTrigger id="role">
                       <SelectValue />
@@ -197,7 +244,9 @@ export const UsersPage: React.FC = () => {
                   <Input
                     id="department"
                     value={formData.department}
-                    onChange={(e) => setFormData({ ...formData, department: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, department: e.target.value })
+                    }
                   />
                 </div>
               </div>
@@ -206,21 +255,27 @@ export const UsersPage: React.FC = () => {
                 <Input
                   id="position"
                   value={formData.position}
-                  onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, position: e.target.value })
+                  }
                 />
               </div>
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
                   <Label>Location Tracking</Label>
-                  <p className="text-sm text-gray-500">Allow location tracking</p>
+                  <p className="text-sm text-gray-500">
+                    Allow location tracking
+                  </p>
                 </div>
                 <Switch
                   checked={formData.locationOptIn}
-                  onCheckedChange={(checked) => setFormData({ ...formData, locationOptIn: checked })}
+                  onCheckedChange={(checked: boolean) =>
+                    setFormData({ ...formData, locationOptIn: checked })
+                  }
                 />
               </div>
               <Button type="submit" className="w-full">
-                {editingUser ? 'Update User' : 'Create User'}
+                {editingUser ? "Update User" : "Create User"}
               </Button>
             </form>
           </DialogContent>
@@ -246,7 +301,9 @@ export const UsersPage: React.FC = () => {
             <Shield className="h-4 w-4 text-gray-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl">{users.filter(u => u.role === 'admin').length}</div>
+            <div className="text-2xl">
+              {users.filter((u) => u.role === "admin").length}
+            </div>
           </CardContent>
         </Card>
         <Card>
@@ -255,7 +312,9 @@ export const UsersPage: React.FC = () => {
             <UserCheck className="h-4 w-4 text-gray-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl">{users.filter(u => u.role === 'manager').length}</div>
+            <div className="text-2xl">
+              {users.filter((u) => u.role === "manager").length}
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -263,7 +322,9 @@ export const UsersPage: React.FC = () => {
       <Card>
         <CardHeader>
           <CardTitle>All Users</CardTitle>
-          <CardDescription>Manage user accounts and permissions</CardDescription>
+          <CardDescription>
+            Manage user accounts and permissions
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
@@ -304,7 +365,7 @@ export const UsersPage: React.FC = () => {
                   </Button>
                   <Button
                     size="sm"
-                    variant={user.isActive ? 'destructive' : 'default'}
+                    variant={user.isActive ? "destructive" : "default"}
                     onClick={() => handleToggleActive(user._id)}
                   >
                     {user.isActive ? (

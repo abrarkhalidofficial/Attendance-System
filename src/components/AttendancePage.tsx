@@ -25,18 +25,22 @@ import {
 import { format } from "date-fns";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { Id } from "../../convex/_generated/dataModel";
 
-export const AttendancePage = React.forwardRef<HTMLDivElement, Record<string, never>>(function AttendancePage(_props, ref) {
+export const AttendancePage = React.forwardRef<
+  HTMLDivElement,
+  Record<string, never>
+>(function AttendancePage(_props, ref) {
   const { currentUser } = useAuth();
   const settings = useQuery(api.settings.getSettings);
   const activeSession = useQuery(
     api.attendance.getActiveSession,
-    currentUser ? { userId: currentUser.id as any } : undefined
+    currentUser ? { userId: currentUser.id as Id<"users"> } : "skip"
   );
   const userSessions =
     useQuery(
       api.attendance.getAttendanceByUserId,
-      currentUser ? { userId: currentUser.id as any } : undefined
+      currentUser ? { userId: currentUser.id as Id<"users"> } : "skip"
     ) || [];
   const clockInMutation = useMutation(api.attendance.clockIn);
   const clockOutMutation = useMutation(api.attendance.clockOut);
@@ -264,7 +268,7 @@ export const AttendancePage = React.forwardRef<HTMLDivElement, Record<string, ne
                   </div>
                 )}
 
-                {settings.requireFaceVerification && (
+                {settings?.requireFaceVerification && (
                   <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm">
                     <p className="text-blue-900">
                       Face verification is required for clock in/out
