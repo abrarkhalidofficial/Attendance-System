@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 import {
   User,
   AttendanceSession,
@@ -10,11 +16,11 @@ import {
   TimeEntry,
   AuditLog,
   Notification,
-  CompanySettings
-} from '../types';
-import { initializeMockData } from '../utils/mockData';
-import { useQuery, useMutation } from 'convex/react';
-import { api } from '../../convex/_generated/api';
+  CompanySettings,
+} from "../types";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../../convex/_generated/api";
+import { Id } from "../../convex/_generated/dataModel";
 
 interface DataContextType {
   users: User[];
@@ -28,44 +34,53 @@ interface DataContextType {
   auditLogs: AuditLog[];
   notifications: Notification[];
   settings: CompanySettings;
-  
+
   // User operations
-  addUser: (user: Omit<User, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  addUser: (user: Omit<User, "id" | "createdAt" | "updatedAt">) => void;
   updateUser: (id: string, updates: Partial<User>) => void;
   deleteUser: (id: string) => void;
-  
+
   // Attendance operations
   clockIn: (userId: string, data: Partial<AttendanceSession>) => void;
   clockOut: (sessionId: string, data?: Partial<AttendanceSession>) => void;
   getActiveSession: (userId: string) => AttendanceSession | undefined;
   updateSession: (id: string, updates: Partial<AttendanceSession>) => void;
-  
+
   // Leave operations
-  submitLeaveRequest: (request: Omit<LeaveRequest, 'id' | 'createdAt' | 'comments' | 'status'>) => void;
+  submitLeaveRequest: (
+    request: Omit<LeaveRequest, "id" | "createdAt" | "comments" | "status">
+  ) => void;
   updateLeaveRequest: (id: string, updates: Partial<LeaveRequest>) => void;
   addLeaveComment: (requestId: string, userId: string, text: string) => void;
-  
+
   // Project operations
-  addProject: (project: Omit<Project, 'id' | 'createdAt'>) => void;
+  addProject: (project: Omit<Project, "id" | "createdAt">) => void;
   updateProject: (id: string, updates: Partial<Project>) => void;
   deleteProject: (id: string) => void;
-  
+
   // Task operations
-  addTask: (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'actualHours' | 'subtasks'>) => void;
+  addTask: (
+    task: Omit<
+      Task,
+      "id" | "createdAt" | "updatedAt" | "actualHours" | "subtasks"
+    >
+  ) => void;
   updateTask: (id: string, updates: Partial<Task>) => void;
   deleteTask: (id: string) => void;
-  
+
   // Time entry operations
-  addTimeEntry: (entry: Omit<TimeEntry, 'id' | 'createdAt'>) => void;
-  
+  addTimeEntry: (entry: Omit<TimeEntry, "id" | "createdAt">) => void;
+
   // Notification operations
-  addNotification: (notification: Omit<Notification, 'id' | 'createdAt'>) => void;
+  addNotification: (
+    notification: Omit<Notification, "id" | "createdAt">
+  ) => void;
   markNotificationRead: (id: string) => void;
   markAllNotificationsRead: (userId: string) => void;
-  
+
   // Audit operations
-  addAuditLog: (log: Omit<AuditLog, 'id' | 'timestamp'>) => void;
-  
+  addAuditLog: (log: Omit<AuditLog, "id" | "timestamp">) => void;
+
   // Settings
   updateSettings: (updates: Partial<CompanySettings>) => void;
 }
@@ -75,7 +90,7 @@ const DataContext = createContext<DataContextType | undefined>(undefined);
 export const useData = () => {
   const context = useContext(DataContext);
   if (!context) {
-    throw new Error('useData must be used within DataProvider');
+    throw new Error("useData must be used within DataProvider");
   }
   return context;
 };
@@ -86,7 +101,9 @@ interface DataProviderProps {
 
 export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   const [users, setUsers] = useState<User[]>([]);
-  const [attendanceSessions, setAttendanceSessions] = useState<AttendanceSession[]>([]);
+  const [attendanceSessions, setAttendanceSessions] = useState<
+    AttendanceSession[]
+  >([]);
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
   const [leaveBalances, setLeaveBalances] = useState<LeaveBalance[]>([]);
   const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([]);
@@ -103,15 +120,16 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     overtimeRules: {
       dailyThreshold: 8,
       weeklyThreshold: 40,
-      multiplier: 1.5
+      multiplier: 1.5,
     },
     workingHoursPerDay: 8,
-    workingDaysPerWeek: 5
+    workingDaysPerWeek: 5,
   });
 
   // Replace localStorage mocks with Convex queries
   const qUsers = useQuery(api.users.getUsers) ?? [];
-  const qAttendanceSessions = useQuery(api.attendance.getAttendanceSessions) ?? [];
+  const qAttendanceSessions =
+    useQuery(api.attendance.getAttendanceSessions) ?? [];
   const qLeaveRequests = useQuery(api.leaves.getLeaveRequests) ?? [];
   const qLeaveBalances = useQuery(api.leaves.getLeaveBalances) ?? [];
   const qLeaveTypes = useQuery(api.leaves.getLeaveTypes) ?? [];
@@ -126,7 +144,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   const mapUser = (u: any): User => ({
     id: u._id,
     email: u.email,
-    password: '',
+    password: "",
     name: u.name,
     role: u.role,
     avatar: u.avatar,
@@ -241,18 +259,40 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     ipAddress: al.ipAddress,
   });
 
-  // Hydrate local state from Convex
-  useEffect(() => { if (qUsers) setUsers(qUsers.map(mapUser)); }, [qUsers]);
-  useEffect(() => { if (qAttendanceSessions) setAttendanceSessions(qAttendanceSessions.map(mapSession)); }, [qAttendanceSessions]);
-  useEffect(() => { if (qLeaveRequests) setLeaveRequests(qLeaveRequests.map(mapLeaveRequest)); }, [qLeaveRequests]);
-  useEffect(() => { if (qLeaveBalances) setLeaveBalances(qLeaveBalances.map(mapLeaveBalance)); }, [qLeaveBalances]);
-  useEffect(() => { if (qLeaveTypes) setLeaveTypes(qLeaveTypes.map(mapLeaveType)); }, [qLeaveTypes]);
-  useEffect(() => { if (qProjects) setProjects(qProjects.map(mapProject)); }, [qProjects]);
-  useEffect(() => { if (qTasks) setTasks(qTasks.map(mapTask)); }, [qTasks]);
-  useEffect(() => { if (qTimeEntries) setTimeEntries(qTimeEntries.map(mapTimeEntry)); }, [qTimeEntries]);
-  useEffect(() => { if (qNotifications) setNotifications(qNotifications.map(mapNotification)); }, [qNotifications]);
-  useEffect(() => { if (qAuditLogs) setAuditLogs(qAuditLogs.map(mapAuditLog)); }, [qAuditLogs]);
-  useEffect(() => { if (qSettings) setSettings(qSettings as CompanySettings); }, [qSettings]);
+  useEffect(() => {
+    if (qUsers) setUsers(qUsers.map(mapUser));
+  }, [qUsers]);
+  useEffect(() => {
+    if (qAttendanceSessions)
+      setAttendanceSessions(qAttendanceSessions.map(mapSession));
+  }, [qAttendanceSessions]);
+  useEffect(() => {
+    if (qLeaveRequests) setLeaveRequests(qLeaveRequests.map(mapLeaveRequest));
+  }, [qLeaveRequests]);
+  useEffect(() => {
+    if (qLeaveBalances) setLeaveBalances(qLeaveBalances.map(mapLeaveBalance));
+  }, [qLeaveBalances]);
+  useEffect(() => {
+    if (qLeaveTypes) setLeaveTypes(qLeaveTypes.map(mapLeaveType));
+  }, [qLeaveTypes]);
+  useEffect(() => {
+    if (qProjects) setProjects(qProjects.map(mapProject));
+  }, [qProjects]);
+  useEffect(() => {
+    if (qTasks) setTasks(qTasks.map(mapTask));
+  }, [qTasks]);
+  useEffect(() => {
+    if (qTimeEntries) setTimeEntries(qTimeEntries.map(mapTimeEntry));
+  }, [qTimeEntries]);
+  useEffect(() => {
+    if (qNotifications) setNotifications(qNotifications.map(mapNotification));
+  }, [qNotifications]);
+  useEffect(() => {
+    if (qAuditLogs) setAuditLogs(qAuditLogs.map(mapAuditLog));
+  }, [qAuditLogs]);
+  useEffect(() => {
+    if (qSettings) setSettings(qSettings as CompanySettings);
+  }, [qSettings]);
 
   // Convex mutations
   const mCreateUser = useMutation(api.users.createUser);
@@ -278,15 +318,21 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
   const mCreateTimeEntry = useMutation(api.timeEntries.createTimeEntry);
 
   const mCreateNotification = useMutation(api.notifications.createNotification);
-  const mMarkNotificationAsRead = useMutation(api.notifications.markNotificationAsRead);
-  const mMarkAllNotificationsAsRead = useMutation(api.notifications.markAllNotificationsAsRead);
+  const mMarkNotificationAsRead = useMutation(
+    api.notifications.markNotificationAsRead
+  );
+  const mMarkAllNotificationsAsRead = useMutation(
+    api.notifications.markAllNotificationsAsRead
+  );
 
   const mCreateAuditLog = useMutation(api.auditLogs.createAuditLog);
 
   const mUpdateSettings = useMutation(api.settings.updateSettings);
 
   // Override operations to use Convex
-  const addUser = async (userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const addUser = async (
+    userData: Omit<User, "id" | "createdAt" | "updatedAt">
+  ) => {
     const id = await mCreateUser({
       email: userData.email,
       password: userData.password,
@@ -299,65 +345,106 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       faceEmbedding: userData.faceEmbedding,
       locationOptIn: userData.locationOptIn,
     });
-    setUsers(prev => [...prev, { ...userData, id, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() } as User]);
+    setUsers((prev) => [
+      ...prev,
+      {
+        ...userData,
+        id,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      } as User,
+    ]);
   };
 
   const updateUser = async (id: string, updates: Partial<User>) => {
     await mUpdateUser({ id: id as any, ...updates });
-    setUsers(prev => prev.map(u => u.id === id ? { ...u, ...updates, updatedAt: new Date().toISOString() } : u));
+    setUsers((prev) =>
+      prev.map((u) =>
+        u.id === id
+          ? { ...u, ...updates, updatedAt: new Date().toISOString() }
+          : u
+      )
+    );
   };
 
   const deleteUser = async (id: string) => {
     await mDeleteUser({ id: id as any });
-    setUsers(prev => prev.map(u => u.id === id ? { ...u, isActive: false } : u));
+    setUsers((prev) =>
+      prev.map((u) => (u.id === id ? { ...u, isActive: false } : u))
+    );
   };
 
   const clockIn = async (userId: string, data: Partial<AttendanceSession>) => {
     const newId = await mClockIn({
       userId: userId as any,
-      deviceFingerprint: data.deviceFingerprint || 'web-browser',
-      ipAddress: data.ipAddress || '0.0.0.0',
+      deviceFingerprint: data.deviceFingerprint || "web-browser",
+      ipAddress: data.ipAddress || "0.0.0.0",
       location: data.location,
       notes: data.notes,
       faceVerified: data.faceVerified ?? false,
       isRemote: data.isRemote ?? false,
     });
-    setAttendanceSessions(prev => [...prev, {
-      id: newId,
-      userId,
-      clockIn: new Date().toISOString(),
-      deviceFingerprint: data.deviceFingerprint || 'web-browser',
-      ipAddress: data.ipAddress || '0.0.0.0',
-      location: data.location,
-      notes: data.notes,
-      faceVerified: data.faceVerified ?? false,
-      status: 'active',
-      isRemote: data.isRemote ?? false,
-    }]);
+    setAttendanceSessions((prev) => [
+      ...prev,
+      {
+        id: newId,
+        userId,
+        clockIn: new Date().toISOString(),
+        deviceFingerprint: data.deviceFingerprint || "web-browser",
+        ipAddress: data.ipAddress || "0.0.0.0",
+        location: data.location,
+        notes: data.notes,
+        faceVerified: data.faceVerified ?? false,
+        status: "active",
+        isRemote: data.isRemote ?? false,
+      },
+    ]);
   };
 
-  const clockOut = async (sessionId: string, data?: Partial<AttendanceSession>) => {
-    await mClockOut({ id: sessionId as any });
-    setAttendanceSessions(prev => prev.map(s => {
-      if (s.id === sessionId) {
-        const clockOut = new Date().toISOString();
-        const totalHours = (new Date(clockOut).getTime() - new Date(s.clockIn).getTime()) / (1000 * 60 * 60);
-        return { ...s, clockOut, totalHours: Math.round(totalHours * 100) / 100, status: 'completed', ...data };
-      }
-      return s;
-    }));
+  const clockOut = async (
+    sessionId: string,
+    data?: Partial<AttendanceSession>
+  ) => {
+    await mClockOut({ sessionId: sessionId as any });
+    setAttendanceSessions((prev) =>
+      prev.map((s) => {
+        if (s.id === sessionId) {
+          const clockOut = new Date().toISOString();
+          const totalHours =
+            (new Date(clockOut).getTime() - new Date(s.clockIn).getTime()) /
+            (1000 * 60 * 60);
+          return {
+            ...s,
+            clockOut,
+            totalHours: Math.round(totalHours * 100) / 100,
+            status: "completed",
+            ...data,
+          };
+        }
+        return s;
+      })
+    );
   };
 
   const getActiveSession = (userId: string) => {
-    return attendanceSessions.find(s => s.userId === userId && s.status === 'active');
+    return attendanceSessions.find(
+      (s) => s.userId === userId && s.status === "active"
+    );
   };
 
-  const updateSession = async (id: string, updates: Partial<AttendanceSession>) => {
-    await mUpdateSession({ id: id as any, ...updates });
-    setAttendanceSessions(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
+  const updateSession = async (
+    id: string,
+    updates: Partial<AttendanceSession>
+  ) => {
+    await mUpdateSession({ sessionId: id as any, ...updates });
+    setAttendanceSessions((prev) =>
+      prev.map((s) => (s.id === id ? { ...s, ...updates } : s))
+    );
   };
 
-  const submitLeaveRequest = async (request: Omit<LeaveRequest, 'id' | 'createdAt' | 'comments' | 'status'>) => {
+  const submitLeaveRequest = async (
+    request: Omit<LeaveRequest, "id" | "createdAt" | "comments" | "status">
+  ) => {
     const id = await mCreateLeaveRequest({
       userId: request.userId as any,
       leaveTypeId: request.leaveTypeId as any,
@@ -367,25 +454,70 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       reason: request.reason,
       attachments: request.attachments,
     });
-    setLeaveRequests(prev => [...prev, { ...request, id, status: 'pending', comments: [], createdAt: new Date().toISOString() }]);
+    setLeaveRequests((prev) => [
+      ...prev,
+      {
+        ...request,
+        id,
+        status: "pending",
+        comments: [],
+        createdAt: new Date().toISOString(),
+      },
+    ]);
   };
 
-  const updateLeaveRequest = async (id: string, updates: Partial<LeaveRequest>) => {
-    await mUpdateLeaveRequest({ id: id as any, ...updates });
-    setLeaveRequests(prev => prev.map(r => r.id === id ? { ...r, ...updates } : r));
+  const updateLeaveRequest = async (
+    id: string,
+    updates: Partial<LeaveRequest>
+  ) => {
+    await mUpdateLeaveRequest({
+      id: id as any,
+      status: updates.status,
+      startDate: updates.startDate,
+      endDate: updates.endDate,
+      isHalfDay: updates.isHalfDay,
+      reason: updates.reason,
+      attachments: updates.attachments,
+      approvedBy: updates.approvedBy as Id<"users"> | undefined,
+      approvedAt: updates.approvedAt,
+    });
+    setLeaveRequests((prev) =>
+      prev.map((r) => (r.id === id ? { ...r, ...updates } : r))
+    );
   };
 
-  const addLeaveComment = async (requestId: string, userId: string, text: string) => {
-    await mAddLeaveComment({ leaveRequestId: requestId as any, userId: userId as any, text });
-    setLeaveRequests(prev => prev.map(r => {
-      if (r.id === requestId) {
-        return { ...r, comments: [...r.comments, { id: `comment-${Date.now()}`, userId, text, createdAt: new Date().toISOString() }] };
-      }
-      return r;
-    }));
+  const addLeaveComment = async (
+    requestId: string,
+    userId: string,
+    text: string
+  ) => {
+    await mAddLeaveComment({
+      leaveRequestId: requestId as any,
+      userId: userId as any,
+      text,
+    });
+    setLeaveRequests((prev) =>
+      prev.map((r) => {
+        if (r.id === requestId) {
+          return {
+            ...r,
+            comments: [
+              ...r.comments,
+              {
+                id: `comment-${Date.now()}`,
+                userId,
+                text,
+                createdAt: new Date().toISOString(),
+              },
+            ],
+          };
+        }
+        return r;
+      })
+    );
   };
 
-  const addProject = async (project: Omit<Project, 'id' | 'createdAt'>) => {
+  const addProject = async (project: Omit<Project, "id" | "createdAt">) => {
     const id = await mCreateProject({
       name: project.name,
       description: project.description,
@@ -394,22 +526,43 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       hourlyRate: project.hourlyRate,
       status: project.status as any,
       createdBy: project.createdBy as any,
-      teamMembers: project.teamMembers?.map(tm => tm as any),
+      teamMembers: project.teamMembers?.map((tm) => tm as any),
     });
-    setProjects(prev => [...prev, { ...project, id, createdAt: new Date().toISOString() }]);
+    setProjects((prev) => [
+      ...prev,
+      { ...project, id, createdAt: new Date().toISOString() },
+    ]);
   };
 
   const updateProject = async (id: string, updates: Partial<Project>) => {
-    await mUpdateProject({ id: id as any, ...updates });
-    setProjects(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
+    await mUpdateProject({
+      id: id as any,
+      name: updates.name,
+      status: updates.status as any,
+      description: updates.description,
+      client: updates.client,
+      isBillable: updates.isBillable,
+      hourlyRate: updates.hourlyRate,
+      teamMembers: updates.teamMembers?.map((tm) => tm as any),
+    });
+    setProjects((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, ...updates } : p))
+    );
   };
 
   const deleteProject = async (id: string) => {
     await mDeleteProject({ id: id as any });
-    setProjects(prev => prev.map(p => p.id === id ? { ...p, status: 'archived' } : p));
+    setProjects((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, status: "archived" } : p))
+    );
   };
 
-  const addTask = async (task: Omit<Task, 'id' | 'createdAt' | 'updatedAt' | 'actualHours' | 'subtasks'>) => {
+  const addTask = async (
+    task: Omit<
+      Task,
+      "id" | "createdAt" | "updatedAt" | "actualHours" | "subtasks"
+    >
+  ) => {
     const id = await mCreateTask({
       projectId: task.projectId as any,
       title: task.title,
@@ -422,20 +575,47 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       priority: task.priority as any,
       attachments: task.attachments,
     });
-    setTasks(prev => [...prev, { ...task, id, actualHours: 0, subtasks: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() }]);
+    setTasks((prev) => [
+      ...prev,
+      {
+        ...task,
+        id,
+        actualHours: 0,
+        subtasks: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+    ]);
   };
 
   const updateTask = async (id: string, updates: Partial<Task>) => {
-    await mUpdateTask({ id: id as any, ...updates });
-    setTasks(prev => prev.map(t => t.id === id ? { ...t, ...updates, updatedAt: new Date().toISOString() } : t));
+    await mUpdateTask({
+      id: id as any,
+      status: updates.status,
+      attachments: updates.attachments,
+      description: updates.description,
+      actualHours: updates.actualHours,
+      assignedTo: updates.assignedTo ? (updates.assignedTo as any) : undefined,
+      dueDate: updates.dueDate,
+      estimatedHours: updates.estimatedHours,
+      priority: updates.priority as any,
+      title: updates.title,
+    });
+    setTasks((prev) =>
+      prev.map((t) =>
+        t.id === id
+          ? { ...t, ...updates, updatedAt: new Date().toISOString() }
+          : t
+      )
+    );
   };
 
   const deleteTask = async (id: string) => {
     await mDeleteTask({ id: id as any });
-    setTasks(prev => prev.filter(t => t.id !== id));
+    setTasks((prev) => prev.filter((t) => t.id !== id));
   };
 
-  const addTimeEntry = async (entry: Omit<TimeEntry, 'id' | 'createdAt'>) => {
+  const addTimeEntry = async (entry: Omit<TimeEntry, "id" | "createdAt">) => {
     const id = await mCreateTimeEntry({
       userId: entry.userId as any,
       projectId: entry.projectId as any,
@@ -445,13 +625,24 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       description: entry.description,
       date: entry.date,
     });
-    setTimeEntries(prev => [...prev, { ...entry, id, createdAt: new Date().toISOString() }]);
+    setTimeEntries((prev) => [
+      ...prev,
+      { ...entry, id, createdAt: new Date().toISOString() },
+    ]);
     if (entry.taskId) {
-      setTasks(prev => prev.map(t => t.id === entry.taskId ? { ...t, actualHours: (t.actualHours || 0) + entry.hours } : t));
+      setTasks((prev) =>
+        prev.map((t) =>
+          t.id === entry.taskId
+            ? { ...t, actualHours: (t.actualHours || 0) + entry.hours }
+            : t
+        )
+      );
     }
   };
 
-  const addNotification = async (notification: Omit<Notification, 'id' | 'createdAt'>) => {
+  const addNotification = async (
+    notification: Omit<Notification, "id" | "createdAt">
+  ) => {
     await mCreateNotification({
       userId: notification.userId as any,
       type: notification.type as any,
@@ -459,29 +650,47 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       message: notification.message,
       actionUrl: notification.actionUrl,
     });
-    setNotifications(prev => [...prev, { ...notification, id: `notif-${Date.now()}`, createdAt: new Date().toISOString() }]);
+    setNotifications((prev) => [
+      ...prev,
+      {
+        ...notification,
+        id: `notif-${Date.now()}`,
+        createdAt: new Date().toISOString(),
+      },
+    ]);
   };
 
   const markNotificationRead = async (id: string) => {
     await mMarkNotificationAsRead({ id: id as any });
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+    );
   };
 
   const markAllNotificationsRead = async (userId: string) => {
     await mMarkAllNotificationsAsRead({ userId: userId as any });
-    setNotifications(prev => prev.map(n => n.userId === userId ? { ...n, read: true } : n));
+    setNotifications((prev) =>
+      prev.map((n) => (n.userId === userId ? { ...n, read: true } : n))
+    );
   };
 
-  const addAuditLog = async (log: Omit<AuditLog, 'id' | 'timestamp'>) => {
+  const addAuditLog = async (log: Omit<AuditLog, "id" | "timestamp">) => {
     await mCreateAuditLog({
       userId: log.userId as any,
       action: log.action,
       entityType: log.entityType,
       entityId: log.entityId,
       changes: log.changes,
-      ipAddress: log.ipAddress || '0.0.0.0',
+      ipAddress: log.ipAddress || "0.0.0.0",
     });
-    setAuditLogs(prev => [...prev, { ...log, id: `audit-${Date.now()}`, timestamp: new Date().toISOString() }]);
+    setAuditLogs((prev) => [
+      ...prev,
+      {
+        ...log,
+        id: `audit-${Date.now()}`,
+        timestamp: new Date().toISOString(),
+      },
+    ]);
   };
 
   const updateSettings = async (updates: Partial<CompanySettings>) => {
@@ -494,7 +703,7 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
       workingHoursPerDay: updates.workingHoursPerDay,
       workingDaysPerWeek: updates.workingDaysPerWeek,
     });
-    setSettings(prev => ({ ...prev, ...updates }));
+    setSettings((prev) => ({ ...prev, ...updates }));
   };
 
   return (
