@@ -1,34 +1,40 @@
-import React, { useState } from 'react';
-import { useAuth } from '../hooks/useAuth';
-import { useData } from '../contexts/DataContext';
-import { Button } from './ui/button';
-import { Input } from './ui/input';
-import { Label } from './ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
-import { toast } from 'sonner@2.0.3';
-import { LogIn, UserPlus } from 'lucide-react';
+import React, { useState } from "react";
+import { useAuth } from "../hooks/useAuth";
+import { useData } from "../contexts/DataContext";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "./ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import { toast } from "sonner@2.0.3";
+import { LogIn, UserPlus } from "lucide-react";
 
 export const Login: React.FC = () => {
   const { login, register } = useAuth();
   const { settings } = useData();
-  const [loginEmail, setLoginEmail] = useState('');
-  const [loginPassword, setLoginPassword] = useState('');
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
   const [registerData, setRegisterData] = useState({
-    email: '',
-    password: '',
-    name: '',
-    department: '',
-    position: '',
+    email: "",
+    password: "",
+    name: "",
+    department: "",
+    position: "",
   });
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     const success = await login(loginEmail, loginPassword);
     if (success) {
-      toast.success('Logged in successfully!');
+      toast.success("Logged in successfully!");
     } else {
-      toast.error('Invalid credentials or account is inactive');
+      toast.error("Invalid credentials or account is inactive");
     }
   };
 
@@ -36,15 +42,21 @@ export const Login: React.FC = () => {
     e.preventDefault();
     const success = await register({
       ...registerData,
-      role: 'employee',
+      role: "employee",
       isActive: true,
       locationOptIn: false,
     });
     if (success) {
-      toast.success('Account created! Please log in.');
-      setRegisterData({ email: '', password: '', name: '', department: '', position: '' });
+      toast.success("Account created! Please log in.");
+      setRegisterData({
+        email: "",
+        password: "",
+        name: "",
+        department: "",
+        position: "",
+      });
     } else {
-      toast.error('Email already exists');
+      toast.error("Email already exists");
     }
   };
 
@@ -53,7 +65,9 @@ export const Login: React.FC = () => {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle>Time Tracking System</CardTitle>
-          <CardDescription>Manage attendance, leave, and projects</CardDescription>
+          <CardDescription>
+            Manage attendance, leave, and projects
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="login">
@@ -63,7 +77,7 @@ export const Login: React.FC = () => {
                 <TabsTrigger value="register">Register</TabsTrigger>
               )}
             </TabsList>
-            
+
             <TabsContent value="login">
               <form onSubmit={handleLogin} className="space-y-4">
                 <div className="space-y-2">
@@ -91,18 +105,9 @@ export const Login: React.FC = () => {
                   <LogIn className="mr-2 h-4 w-4" />
                   Log In
                 </Button>
-                
-                <div className="mt-4 p-3 bg-blue-50 rounded-md text-sm">
-                  <p className="font-medium mb-2">Demo Accounts:</p>
-                  <div className="space-y-1 text-xs">
-                    <p><strong>Admin:</strong> admin@company.com / admin123</p>
-                    <p><strong>Manager:</strong> manager@company.com / manager123</p>
-                    <p><strong>Employee:</strong> employee@company.com / employee123</p>
-                  </div>
-                </div>
               </form>
             </TabsContent>
-            
+
             {settings.allowSelfRegistration && (
               <TabsContent value="register">
                 <form onSubmit={handleRegister} className="space-y-4">
@@ -112,7 +117,12 @@ export const Login: React.FC = () => {
                       id="register-name"
                       placeholder="John Doe"
                       value={registerData.name}
-                      onChange={(e) => setRegisterData({ ...registerData, name: e.target.value })}
+                      onChange={(e) =>
+                        setRegisterData({
+                          ...registerData,
+                          name: e.target.value,
+                        })
+                      }
                       required
                     />
                   </div>
@@ -123,7 +133,12 @@ export const Login: React.FC = () => {
                       type="email"
                       placeholder="email@company.com"
                       value={registerData.email}
-                      onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
+                      onChange={(e) =>
+                        setRegisterData({
+                          ...registerData,
+                          email: e.target.value,
+                        })
+                      }
                       required
                     />
                   </div>
@@ -133,7 +148,12 @@ export const Login: React.FC = () => {
                       id="register-password"
                       type="password"
                       value={registerData.password}
-                      onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
+                      onChange={(e) =>
+                        setRegisterData({
+                          ...registerData,
+                          password: e.target.value,
+                        })
+                      }
                       required
                     />
                   </div>
@@ -143,7 +163,12 @@ export const Login: React.FC = () => {
                       id="register-department"
                       placeholder="Engineering"
                       value={registerData.department}
-                      onChange={(e) => setRegisterData({ ...registerData, department: e.target.value })}
+                      onChange={(e) =>
+                        setRegisterData({
+                          ...registerData,
+                          department: e.target.value,
+                        })
+                      }
                     />
                   </div>
                   <div className="space-y-2">
@@ -152,7 +177,12 @@ export const Login: React.FC = () => {
                       id="register-position"
                       placeholder="Software Developer"
                       value={registerData.position}
-                      onChange={(e) => setRegisterData({ ...registerData, position: e.target.value })}
+                      onChange={(e) =>
+                        setRegisterData({
+                          ...registerData,
+                          position: e.target.value,
+                        })
+                      }
                     />
                   </div>
                   <Button type="submit" className="w-full">
