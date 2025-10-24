@@ -401,15 +401,22 @@ export const getUserAttendanceHistory = query({
 });
 
 export const getCurrentlyActiveUsers = query({
-  handler: async (ctx) => {
-    const current = await requireRole(ctx, ["manager", "admin"]);
+  args: { userId: v.id("users") },
+  handler: async (ctx, args) => {
+    const caller = await ctx.db.get(args.userId);
+    if (
+      !caller ||
+      caller.status !== "active" ||
+      (caller.role !== "manager" && caller.role !== "admin")
+    ) {
+      throw new Error("Unauthorized");
+    }
 
     const active = await ctx.db
       .query("attendanceSessions")
       .filter((q) => q.eq(q.field("clockOutAt"), undefined))
       .collect();
 
-    // Return with joined user info
     const usersMap = new Map<string, any>();
     for (const s of active) {
       if (!usersMap.has(String(s.userId))) {
