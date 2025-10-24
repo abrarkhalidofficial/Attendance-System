@@ -94,6 +94,17 @@ export const Layout: React.FC<LayoutProps> = ({ children, currentView, onViewCha
                 )}
               </Button>
 
+              {/* Direct Logout button in header */}
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Logout"
+                onClick={logout}
+                title="Log out"
+              >
+                <LogOut className="h-5 w-5" />
+              </Button>
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="gap-2">
