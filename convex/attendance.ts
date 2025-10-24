@@ -175,13 +175,12 @@ export const getAttendanceByDateRange = query({
     endDate: v.string(),
   },
   handler: async (ctx, args) => {
-    let query = ctx.db.query("attendanceSessions");
+    const base = ctx.db.query("attendanceSessions");
+    const q = args.userId
+      ? base.withIndex("by_userId", (qi) => qi.eq("userId", args.userId!))
+      : base;
 
-    if (args.userId) {
-      query = query.withIndex("by_userId", (q) => q.eq("userId", args.userId!));
-    }
-
-    const sessions = await query.collect();
+    const sessions = await q.collect();
 
     return sessions.filter((session) => {
       const sessionDate = session.clockIn.split("T")[0];
