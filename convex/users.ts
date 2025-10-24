@@ -136,9 +136,9 @@ export const adminUpdateUser = mutation({
     const user = await ctx.db.get(args.id);
     if (!user) return { success: false, message: "User not found" };
     const updates: any = { updatedAt: Date.now() };
-    if (args.name !== undefined) updates.name = args.name;
-    if (args.role !== undefined) updates.role = args.role;
-    if (args.status !== undefined) updates.status = args.status;
+    if (args.name) updates.name = args.name;
+    if (args.role) updates.role = args.role;
+    if (args.status) updates.status = args.status;
     await ctx.db.patch(args.id, updates);
     await ctx.db.insert("auditLogs", {
       actorId: admin._id,
@@ -162,6 +162,29 @@ export const deactivateUser = mutation({
     await ctx.db.insert("auditLogs", {
       actorId: admin._id,
       action: "deactivate_user",
+      target: { type: "users", id: args.id },
+      metadata: {},
+      at: Date.now(),
+    });
+    return { success: true };
+  },
+});
+
+// Admin reset face data for a user
+export const adminResetFaceData = mutation({
+  args: { id: v.id("users") },
+  handler: async (ctx, args) => {
+    const admin = await requireRole(ctx, ["admin", "manager"]);
+    const user = await ctx.db.get(args.id);
+    if (!user) return { success: false, message: "User not found" };
+    await ctx.db.patch(args.id, {
+      faceEmbedding: undefined,
+      faceConsentAt: undefined,
+      updatedAt: Date.now(),
+    });
+    await ctx.db.insert("auditLogs", {
+      actorId: admin._id,
+      action: "admin_reset_face_data",
       target: { type: "users", id: args.id },
       metadata: {},
       at: Date.now(),

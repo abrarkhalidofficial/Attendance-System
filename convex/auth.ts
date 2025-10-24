@@ -1,9 +1,22 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { z } from "zod";
+
+// Zod schemas for auth inputs
+const loginSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(8),
+});
 
 export const login = mutation({
   args: { email: v.string(), password: v.string() },
   handler: async (ctx, args) => {
+    // Additional validation with zod
+    const parsed = loginSchema.safeParse(args);
+    if (!parsed.success) {
+      throw new Error(parsed.error.flatten().formErrors.join("; "));
+    }
+
     const user = await ctx.db
       .query("users")
       .filter((q) => q.eq(q.field("email"), args.email))
@@ -55,6 +68,22 @@ export const getCurrentUser = query({
   },
 });
 
+// Shared guards for Convex functions
+export const requireAuth = async (ctx: any) => {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) {
+    throw new Error("Unauthorized");
+  }
+  const user = await ctx.db
+    .query("users")
+    .filter((q: any) => q.eq(q.field("email"), identity.email))
+    .first();
+  if (!user || user.status !== "active") {
+    throw new Error("Unauthorized");
+  }
+  return user;
+};
+
 export const requireAdmin = async (ctx: any, userId: any) => {
   if (!userId) {
     throw new Error("Unauthorized");
@@ -72,15 +101,8 @@ export const requireRole = async (
   ctx: any,
   roles: Array<"admin" | "manager" | "employee">
 ) => {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) {
-    throw new Error("Unauthorized");
-  }
-  const user = await ctx.db
-    .query("users")
-    .filter((q: any) => q.eq(q.field("email"), identity.email))
-    .first();
-  if (!user || !roles.includes(user.role)) {
+  const user = await requireAuth(ctx);
+  if (!roles.includes(user.role)) {
     throw new Error("Forbidden");
   }
   return user;

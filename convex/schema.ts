@@ -42,6 +42,7 @@ export default defineSchema({
     method: v.string(), // "web", "mobile", or "kiosk"
     verification: v.object({
       faceScore: v.optional(v.number()),
+      pass: v.optional(v.boolean()),
       ip: v.string(),
       ua: v.string(),
       geo: v.optional(v.object({

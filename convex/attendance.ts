@@ -1,27 +1,42 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { Id } from "./_generated/dataModel";
+import { requireAuth, requireRole } from "./auth";
+import { z } from "zod";
 
-// Helper function to get current user and verify authentication
-const getCurrentUser = async (ctx: any) => {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) {
-    throw new Error("Unauthorized");
-  }
-  
-  const user = await ctx.db
-    .query("users")
-    .filter((q) => q.eq(q.field("email"), identity.email))
-    .first();
-  
-  if (!user) {
-    throw new Error("User not found");
-  }
-  
-  return user;
-};
+// Zod schemas for attendance inputs
+const verificationSchema = z.object({
+  ip: z.string().min(3),
+  ua: z.string().min(3),
+  geo: z
+    .object({ lat: z.number(), lng: z.number(), acc: z.number() })
+    .optional(),
+  faceEmbedding: z.array(z.number()).min(64).max(1024).optional(),
+});
 
-// Clock in function
+const clockInSchema = z.object({
+  method: z.enum(["web", "mobile", "kiosk"]),
+  verification: verificationSchema,
+  projectId: z.string().optional(),
+  taskId: z.string().optional(),
+  notes: z.string().max(500).optional(),
+});
+
+function cosineSimilarity(a: number[], b: number[]) {
+  let dot = 0,
+    normA = 0,
+    normB = 0;
+  const len = Math.min(a.length, b.length);
+  for (let i = 0; i < len; i++) {
+    dot += a[i] * b[i];
+    normA += a[i] * a[i];
+    normB += b[i] * b[i];
+  }
+  const denom = Math.sqrt(normA) * Math.sqrt(normB);
+  return denom === 0 ? 0 : dot / denom;
+}
+
+// Clock in function with face verification
 export const clockIn = mutation({
   args: {
     method: v.string(),
@@ -29,48 +44,74 @@ export const clockIn = mutation({
       faceScore: v.optional(v.number()),
       ip: v.string(),
       ua: v.string(),
-      geo: v.optional(v.object({
-        lat: v.number(),
-        lng: v.number(),
-        acc: v.number(),
-      })),
+      geo: v.optional(
+        v.object({
+          lat: v.number(),
+          lng: v.number(),
+          acc: v.number(),
+        })
+      ),
+      // Temporary embedding for verification (not stored server-side)
+      faceEmbedding: v.optional(v.array(v.number())),
+      pass: v.optional(v.boolean()),
     }),
     projectId: v.optional(v.id("projects")),
     taskId: v.optional(v.id("tasks")),
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // Zod validation for extra constraints
+    const parsed = clockInSchema.safeParse(args);
+    if (!parsed.success) {
+      throw new Error(parsed.error.flatten().formErrors.join("; "));
+    }
+
     // Get current user
-    const user = await getCurrentUser(ctx);
-    
+    const user = await requireRole(ctx, ["employee", "manager", "admin"]);
+
+    // If user has enrolled faceEmbedding and client provided current embedding, verify
+    let faceScore: number | undefined = undefined;
+    let facePass: boolean | undefined = undefined;
+    const threshold = 0.85;
+    if (user.faceEmbedding && args.verification.faceEmbedding) {
+      faceScore = cosineSimilarity(user.faceEmbedding, args.verification.faceEmbedding);
+      facePass = faceScore >= threshold;
+      if (!facePass) {
+        throw new Error("Face verification failed. Please try again or contact admin.");
+      }
+    }
+
     // Check if user already has an active session (no clock-out)
     const activeSession = await ctx.db
       .query("attendanceSessions")
-      .filter((q) => 
-        q.and(
-          q.eq(q.field("userId"), user._id),
-          q.eq(q.field("clockOutAt"), undefined)
-        )
+      .filter((q) =>
+        q.and(q.eq(q.field("userId"), user._id), q.eq(q.field("clockOutAt"), undefined))
       )
       .first();
-    
+
     if (activeSession) {
       throw new Error("You already have an active session. Please clock out first.");
     }
-    
+
     // Create new attendance session
     const sessionId = await ctx.db.insert("attendanceSessions", {
       userId: user._id,
       clockInAt: Date.now(),
       method: args.method,
-      verification: args.verification,
+      verification: {
+        ip: args.verification.ip,
+        ua: args.verification.ua,
+        geo: args.verification.geo,
+        faceScore,
+        pass: facePass,
+      },
       projectId: args.projectId,
       taskId: args.taskId,
       notes: args.notes,
       createdAt: Date.now(),
       updatedAt: Date.now(),
     });
-    
+
     // Create audit log
     await ctx.db.insert("auditLogs", {
       actorId: user._id,
@@ -84,16 +125,17 @@ export const clockIn = mutation({
         verification: {
           ip: args.verification.ip,
           geo: args.verification.geo,
+          faceScore,
         },
       },
       at: Date.now(),
     });
-    
+
     return { success: true, sessionId };
   },
 });
 
-// Clock out function
+// Clock out function (auth + zod verification)
 export const clockOut = mutation({
   args: {
     sessionId: v.optional(v.id("attendanceSessions")),
@@ -101,54 +143,58 @@ export const clockOut = mutation({
       faceScore: v.optional(v.number()),
       ip: v.string(),
       ua: v.string(),
-      geo: v.optional(v.object({
-        lat: v.number(),
-        lng: v.number(),
-        acc: v.number(),
-      })),
+      geo: v.optional(
+        v.object({
+          lat: v.number(),
+          lng: v.number(),
+          acc: v.number(),
+        })
+      ),
     }),
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    // Get current user
-    const user = await getCurrentUser(ctx);
-    
+    // Validate verification shape
+    const parsed = verificationSchema.safeParse(args.verification);
+    if (!parsed.success) {
+      throw new Error(parsed.error.flatten().formErrors.join("; "));
+    }
+
+    const user = await requireRole(ctx, ["employee", "manager", "admin"]);
+
     // Find active session
     let activeSession;
-    
+
     if (args.sessionId) {
       activeSession = await ctx.db.get(args.sessionId);
-      
+
       if (!activeSession) {
         throw new Error("Session not found");
       }
-      
+
       if (activeSession.userId !== user._id && user.role !== "admin") {
         throw new Error("Unauthorized to modify this session");
       }
-      
+
       if (activeSession.clockOutAt) {
         throw new Error("This session is already clocked out");
       }
     } else {
       activeSession = await ctx.db
         .query("attendanceSessions")
-        .filter((q) => 
-          q.and(
-            q.eq(q.field("userId"), user._id),
-            q.eq(q.field("clockOutAt"), undefined)
-          )
+        .filter((q) =>
+          q.and(q.eq(q.field("userId"), user._id), q.eq(q.field("clockOutAt"), undefined))
         )
         .first();
-      
+
       if (!activeSession) {
         throw new Error("No active session found. Please clock in first.");
       }
     }
-    
+
     const clockOutTime = Date.now();
     const durationSec = Math.floor((clockOutTime - activeSession.clockInAt) / 1000);
-    
+
     // Update session with clock out time
     await ctx.db.patch(activeSession._id, {
       clockOutAt: clockOutTime,
@@ -156,7 +202,7 @@ export const clockOut = mutation({
       notes: args.notes || activeSession.notes,
       updatedAt: Date.now(),
     });
-    
+
     // Create audit log
     await ctx.db.insert("auditLogs", {
       actorId: user._id,
@@ -174,7 +220,7 @@ export const clockOut = mutation({
       },
       at: Date.now(),
     });
-    
+
     // If there was a project and task, create a time entry
     if (activeSession.projectId || activeSession.taskId) {
       await ctx.db.insert("timeEntries", {
@@ -189,12 +235,12 @@ export const clockOut = mutation({
         updatedAt: Date.now(),
       });
     }
-    
-    return { 
-      success: true, 
+
+    return {
+      success: true,
       sessionId: activeSession._id,
       durationSec,
-      durationFormatted: formatDuration(durationSec)
+      durationFormatted: formatDuration(durationSec),
     };
   },
 });
@@ -207,30 +253,23 @@ export const adminFixClockOut = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    // Get current user and verify admin
-    const user = await getCurrentUser(ctx);
-    if (user.role !== "admin" && user.role !== "manager") {
-      throw new Error("Unauthorized. Only admins and managers can fix clock-outs.");
-    }
-    
-    // Get the session
+    const user = await requireRole(ctx, ["admin", "manager"]);
+
     const session = await ctx.db.get(args.sessionId);
     if (!session) {
       throw new Error("Session not found");
     }
-    
+
     if (session.clockOutAt) {
       throw new Error("This session is already clocked out");
     }
-    
-    // Validate clock-out time is after clock-in
+
     if (args.clockOutAt < session.clockInAt) {
       throw new Error("Clock-out time cannot be before clock-in time");
     }
-    
+
     const durationSec = Math.floor((args.clockOutAt - session.clockInAt) / 1000);
-    
-    // Update session
+
     await ctx.db.patch(args.sessionId, {
       clockOutAt: args.clockOutAt,
       durationSec,
@@ -238,8 +277,7 @@ export const adminFixClockOut = mutation({
       closedByAdminId: user._id,
       updatedAt: Date.now(),
     });
-    
-    // Create audit log
+
     await ctx.db.insert("auditLogs", {
       actorId: user._id,
       action: "admin_fix_clock_out",
@@ -249,70 +287,90 @@ export const adminFixClockOut = mutation({
       },
       metadata: {
         durationSec,
-        originalClockInAt: session.clockInAt,
-        fixedClockOutAt: args.clockOutAt,
       },
       at: Date.now(),
     });
-    
-    // If there was a project and task, create a time entry
-    if (session.projectId || session.taskId) {
-      await ctx.db.insert("timeEntries", {
-        userId: session.userId,
-        projectId: session.projectId,
-        taskId: session.taskId,
-        sessionId: session._id,
-        startedAt: session.clockInAt,
-        endedAt: args.clockOutAt,
-        durationSec,
-        note: `Admin fixed clock-out by ${user.name}`,
-        createdAt: Date.now(),
-        updatedAt: Date.now(),
-      });
-    }
-    
-    return { 
-      success: true, 
-      sessionId: session._id,
-      durationSec,
-      durationFormatted: formatDuration(durationSec)
-    };
+
+    return { success: true };
   },
 });
 
-// Get current active session for user
+// Enroll face embedding (explicit consent)
+export const enrollFace = mutation({
+  args: {
+    embedding: v.array(v.number()),
+    consent: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const user = await requireRole(ctx, ["employee", "manager", "admin"]);
+
+    const enrollSchema = z.object({
+      embedding: z.array(z.number()).min(64).max(1024),
+      consent: z.literal(true),
+    });
+    const parsed = enrollSchema.safeParse(args);
+    if (!parsed.success) {
+      throw new Error("Explicit consent required and embedding must be valid");
+    }
+
+    await ctx.db.patch(user._id, {
+      faceEmbedding: args.embedding.map((x) => Number(x)),
+      faceConsentAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+
+    await ctx.db.insert("auditLogs", {
+      actorId: user._id,
+      action: "enroll_face",
+      target: { type: "users", id: user._id },
+      metadata: { dims: args.embedding.length },
+      at: Date.now(),
+    });
+
+    return { success: true };
+  },
+});
+
+// Delete biometric data (user-initiated)
+export const deleteBiometricData = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const user = await requireRole(ctx, ["employee", "manager", "admin"]);
+
+    await ctx.db.patch(user._id, {
+      faceEmbedding: undefined,
+      faceConsentAt: undefined,
+      updatedAt: Date.now(),
+    });
+
+    await ctx.db.insert("auditLogs", {
+      actorId: user._id,
+      action: "delete_biometric",
+      target: { type: "users", id: user._id },
+      metadata: {},
+      at: Date.now(),
+    });
+
+    return { success: true };
+  },
+});
+
 export const getCurrentSession = query({
   handler: async (ctx) => {
-    // Get current user
-    const user = await getCurrentUser(ctx);
-    
-    // Find active session
+    const user = await requireAuth(ctx);
+
     const activeSession = await ctx.db
       .query("attendanceSessions")
-      .filter((q) => 
-        q.and(
-          q.eq(q.field("userId"), user._id),
-          q.eq(q.field("clockOutAt"), undefined)
-        )
+      .filter((q) =>
+        q.and(q.eq(q.field("userId"), user._id), q.eq(q.field("clockOutAt"), undefined))
       )
       .first();
-    
-    if (!activeSession) {
-      return null;
-    }
-    
-    // Calculate current duration
-    const currentDuration = Math.floor((Date.now() - activeSession.clockInAt) / 1000);
-    
-    return {
-      ...activeSession,
-      currentDuration,
-      currentDurationFormatted: formatDuration(currentDuration),
-    };
+
+    if (!activeSession) return null;
+    return activeSession;
   },
 });
 
-// Get user's attendance history
 export const getUserAttendanceHistory = query({
   args: {
     userId: v.optional(v.id("users")),
@@ -321,100 +379,55 @@ export const getUserAttendanceHistory = query({
     limit: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    // Get current user
-    const currentUser = await getCurrentUser(ctx);
-    
-    // Determine which user's history to fetch
-    const targetUserId = args.userId || currentUser._id;
-    
-    // If requesting another user's history, verify permissions
-    if (targetUserId !== currentUser._id && 
-        currentUser.role !== "admin" && 
-        currentUser.role !== "manager") {
-      throw new Error("Unauthorized to view other users' attendance history");
+    const current = await requireRole(ctx, ["employee", "manager", "admin"]);
+    const targetUserId = args.userId ?? current._id;
+
+    // Role-based access: employees can only read their own; managers/admins can read all
+    if (current.role === "employee" && targetUserId !== current._id) {
+      throw new Error("Forbidden");
     }
-    
-    // Build query
-    let sessionsQuery = ctx.db
+
+    let q = ctx.db
       .query("attendanceSessions")
-      .filter((q) => q.eq(q.field("userId"), targetUserId))
-      .order("desc");
-    
-    // Apply date filters if provided
-    if (args.startDate) {
-      sessionsQuery = sessionsQuery.filter((q) => 
-        q.gte(q.field("clockInAt"), args.startDate!)
-      );
-    }
-    
-    if (args.endDate) {
-      sessionsQuery = sessionsQuery.filter((q) => 
-        q.lte(q.field("clockInAt"), args.endDate!)
-      );
-    }
-    
-    // Apply limit if provided
-    const limit = args.limit || 50;
-    const sessions = await sessionsQuery.take(limit);
-    
-    // Format sessions with duration
-    return sessions.map(session => {
-      const durationSec = session.durationSec || 
-        (session.clockOutAt ? 
-          Math.floor((session.clockOutAt - session.clockInAt) / 1000) : 
-          Math.floor((Date.now() - session.clockInAt) / 1000));
-      
-      return {
-        ...session,
-        durationFormatted: formatDuration(durationSec),
-      };
-    });
+      .filter((qq) => qq.eq(qq.field("userId"), targetUserId));
+
+    if (args.startDate) q = q.filter((qq) => qq.gte(qq.field("clockInAt"), args.startDate!));
+    if (args.endDate) q = q.filter((qq) => qq.lte(qq.field("clockInAt"), args.endDate!));
+
+    const limit = Math.min(args.limit ?? 50, 200);
+    const results = await q.order("desc").take(limit);
+    return results;
   },
 });
 
-// Get users who are currently clocked in
 export const getCurrentlyActiveUsers = query({
   handler: async (ctx) => {
-    // Get current user and verify permissions
-    const user = await getCurrentUser(ctx);
-    if (user.role !== "admin" && user.role !== "manager") {
-      throw new Error("Unauthorized. Only admins and managers can view active users.");
-    }
-    
-    // Get active sessions
-    const activeSessions = await ctx.db
+    const current = await requireRole(ctx, ["manager", "admin"]);
+
+    const active = await ctx.db
       .query("attendanceSessions")
       .filter((q) => q.eq(q.field("clockOutAt"), undefined))
       .collect();
-    
-    // Get user details for each session
-    const userIds = [...new Set(activeSessions.map(session => session.userId))];
-    const users = await Promise.all(
-      userIds.map(userId => ctx.db.get(userId))
-    );
-    
-    // Combine session and user data
-    return activeSessions.map(session => {
-      const sessionUser = users.find(u => u?._id === session.userId);
-      const currentDuration = Math.floor((Date.now() - session.clockInAt) / 1000);
-      
-      return {
-        session: {
-          ...session,
-          currentDuration,
-          currentDurationFormatted: formatDuration(currentDuration),
-        },
-        user: sessionUser,
-      };
-    });
+
+    // Return with joined user info
+    const usersMap = new Map<string, any>();
+    for (const s of active) {
+      if (!usersMap.has(String(s.userId))) {
+        const u = await ctx.db.get(s.userId);
+        usersMap.set(String(s.userId), u);
+      }
+    }
+
+    return active.map((s) => ({
+      session: s,
+      user: usersMap.get(String(s.userId)),
+    }));
   },
 });
 
-// Helper function to format duration in HH:MM:SS
 function formatDuration(seconds: number): string {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const remainingSeconds = seconds % 60;
-  
-  return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  return `${h}h ${m}m ${s}s`;
 }
