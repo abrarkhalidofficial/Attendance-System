@@ -35,13 +35,17 @@ export const login = mutation({
 });
 
 export const getCurrentUser = query({
-  args: { userId: v.optional(v.id("users")) },
-  handler: async (ctx, args) => {
-    if (!args.userId) return null;
-    
-    const user = await ctx.db.get(args.userId);
-    if (!user) return null;
-    
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) return null;
+
+    const user = await ctx.db
+      .query("users")
+      .filter((q) => q.eq(q.field("email"), identity.email))
+      .first();
+
+    if (!user || user.status !== "active") return null;
+
     return {
       id: user._id,
       email: user.email,
@@ -61,5 +65,23 @@ export const requireAdmin = async (ctx: any, userId: any) => {
     throw new Error("Admin access required");
   }
 
+  return user;
+};
+
+export const requireRole = async (
+  ctx: any,
+  roles: Array<"admin" | "manager" | "employee">
+) => {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) {
+    throw new Error("Unauthorized");
+  }
+  const user = await ctx.db
+    .query("users")
+    .filter((q: any) => q.eq(q.field("email"), identity.email))
+    .first();
+  if (!user || !roles.includes(user.role)) {
+    throw new Error("Forbidden");
+  }
   return user;
 };

@@ -8,7 +8,13 @@
  * @module
  */
 
+import type * as attendance from "../attendance.js";
 import type * as auth from "../auth.js";
+import type * as leaves from "../leaves.js";
+import type * as location from "../location.js";
+import type * as projects from "../projects.js";
+import type * as reports from "../reports.js";
+import type * as tasks from "../tasks.js";
 import type * as users from "../users.js";
 
 import type {
@@ -26,7 +32,13 @@ import type {
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  attendance: typeof attendance;
   auth: typeof auth;
+  leaves: typeof leaves;
+  location: typeof location;
+  projects: typeof projects;
+  reports: typeof reports;
+  tasks: typeof tasks;
   users: typeof users;
 }>;
 declare const fullApiWithMounts: typeof fullApi;

@@ -28,7 +28,43 @@ export default function AdminDashboard() {
   // Get users list
   const users = useQuery(api.users.listUsers, user ? { userId: user.id } : "skip");
   const createUser = useMutation(api.users.createUser);
-  
+
+  // Reporting filters
+  const [startDate, setStartDate] = useState<number | undefined>(undefined);
+  const [endDate, setEndDate] = useState<number | undefined>(undefined);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | undefined>(undefined);
+
+  // Reporting data
+  const activeUsers = useQuery(api.attendance.getCurrentlyActiveUsers, user ? {} : "skip");
+  const missingClockOuts = useQuery(api.reports.missingClockOuts, user ? {} : "skip");
+  const hoursData = useQuery(api.reports.hoursPerUserProject, user ? { startDate, endDate } : "skip");
+  const overtimeData = useQuery(api.reports.overtimeReport, user ? { startDate, endDate } : "skip");
+  const leaveData = useQuery(api.reports.leaveUtilization, user ? {} : "skip");
+  const projects = useQuery(api.projects.getAllProjects, user ? { status: "active" } : "skip");
+  const payrollData = useQuery(
+    api.reports.payrollData,
+    user && startDate && endDate ? { startDate, endDate, projectId: selectedProjectId as any } : "skip"
+  );
+
+  // CSV export
+  const exportCsv = () => {
+    if (!payrollData || !startDate || !endDate) return;
+    const rows = [
+      ["User", "Project", "Hours"],
+      ...payrollData.map((r: any) => [r.userName, r.projectName, r.hours]),
+    ];
+    const csv = rows.map((r) => r.join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    const startStr = new Date(startDate).toISOString().slice(0, 10);
+    const endStr = new Date(endDate).toISOString().slice(0, 10);
+    a.download = `payroll_${startStr}_${endStr}${selectedProjectId ? `_project` : ""}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   useEffect(() => {
     // Check if user is logged in and is admin
     const storedUser = localStorage.getItem("user");
