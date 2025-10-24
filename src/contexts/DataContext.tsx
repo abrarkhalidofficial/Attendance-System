@@ -13,6 +13,8 @@ import {
   CompanySettings
 } from '../types';
 import { initializeMockData } from '../utils/mockData';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 
 interface DataContextType {
   users: User[];
@@ -437,3 +439,288 @@ export const DataProvider: React.FC<DataProviderProps> = ({ children }) => {
     </DataContext.Provider>
   );
 };
+
+/*
+// Convex queries (server of record)
+const qUsers = useQuery(api.users.getUsers) ?? [];
+const qAttendanceSessions = useQuery(api.attendance.getAttendanceSessions) ?? [];
+const qLeaveRequests = useQuery(api.leaves.getLeaveRequests) ?? [];
+const qLeaveBalances = useQuery(api.leaves.getLeaveBalances) ?? [];
+const qLeaveTypes = useQuery(api.leaves.getLeaveTypes) ?? [];
+const qProjects = useQuery(api.projects.getProjects) ?? [];
+const qTasks = useQuery(api.projects.getTasks) ?? [];
+const qTimeEntries = useQuery(api.timeEntries.getTimeEntries) ?? [];
+const qAuditLogs = useQuery(api.auditLogs.getAuditLogs) ?? [];
+const qNotifications = useQuery(api.notifications.getNotifications) ?? [];
+const qSettings = useQuery(api.settings.getSettings);
+
+// Convex mutations
+const mCreateUser = useMutation(api.users.createUser);
+const mUpdateUser = useMutation(api.users.updateUser);
+const mDeleteUser = useMutation(api.users.deleteUser);
+
+const mClockIn = useMutation(api.attendance.clockIn);
+const mClockOut = useMutation(api.attendance.clockOut);
+const mUpdateSession = useMutation(api.attendance.updateAttendanceSession);
+
+const mUpdateSettings = useMutation(api.settings.updateSettings);
+
+// Mappers to frontend types
+const mapUser = (u: any): User => ({
+  id: u._id,
+  email: u.email,
+  password: u.password ?? '',
+  name: u.name,
+  role: u.role,
+  avatar: u.avatar,
+  department: u.department,
+  position: u.position,
+  isActive: u.isActive,
+  faceEmbedding: u.faceEmbedding,
+  locationOptIn: u.locationOptIn ?? false,
+  createdAt: new Date(u._creationTime).toISOString(),
+  updatedAt: new Date(u._creationTime).toISOString(),
+});
+
+const mapSession = (s: any): AttendanceSession => ({
+  id: s._id,
+  userId: s.userId,
+  clockIn: s.clockIn,
+  clockOut: s.clockOut,
+  deviceFingerprint: s.deviceFingerprint,
+  ipAddress: s.ipAddress,
+  location: s.location,
+  notes: s.notes,
+  faceVerified: s.faceVerified,
+  status: s.status,
+  totalHours: s.totalHours,
+  isRemote: s.isRemote,
+});
+
+const mapLeaveType = (lt: any): LeaveType => ({
+  id: lt._id,
+  name: lt.name,
+  color: lt.color,
+  defaultBalance: lt.defaultBalance,
+});
+
+const mapLeaveRequest = (lr: any): LeaveRequest => ({
+  id: lr._id,
+  userId: lr.userId,
+  leaveTypeId: lr.leaveTypeId,
+  startDate: lr.startDate,
+  endDate: lr.endDate,
+  isHalfDay: lr.isHalfDay,
+  reason: lr.reason,
+  attachments: lr.attachments ?? [],
+  status: lr.status,
+  approvedBy: lr.approvedBy,
+  approvedAt: lr.approvedAt,
+  comments: [],
+  createdAt: new Date(lr._creationTime).toISOString(),
+});
+
+const mapLeaveBalance = (lb: any): LeaveBalance => ({
+  userId: lb.userId,
+  leaveTypeId: lb.leaveTypeId,
+  balance: lb.balance,
+  used: lb.used,
+  carryover: lb.carryover,
+});
+
+const mapProject = (p: any): Project => ({
+  id: p._id,
+  name: p.name,
+  description: p.description,
+  client: p.client,
+  isBillable: p.isBillable,
+  hourlyRate: p.hourlyRate,
+  status: p.status,
+  createdBy: p.createdBy,
+  createdAt: new Date(p._creationTime).toISOString(),
+  teamMembers: p.teamMembers ?? [],
+});
+
+const mapTask = (t: any): Task => ({
+  id: t._id,
+  projectId: t.projectId,
+  title: t.title,
+  description: t.description,
+  status: t.status,
+  assignedTo: t.assignedTo,
+  createdBy: t.createdBy,
+  estimatedHours: t.estimatedHours,
+  actualHours: t.actualHours ?? 0,
+  dueDate: t.dueDate,
+  priority: t.priority,
+  attachments: t.attachments ?? [],
+  subtasks: t.subtasks ?? [],
+  createdAt: new Date(t._creationTime).toISOString(),
+  updatedAt: new Date(t._creationTime).toISOString(),
+});
+
+const mapTimeEntry = (te: any): TimeEntry => ({
+  id: te._id,
+  userId: te.userId,
+  projectId: te.projectId,
+  taskId: te.taskId,
+  sessionId: te.sessionId,
+  hours: te.hours,
+  description: te.description,
+  date: te.date,
+  createdAt: new Date(te._creationTime).toISOString(),
+});
+
+const mapNotification = (n: any): Notification => ({
+  id: n._id,
+  userId: n.userId,
+  type: n.type,
+  title: n.title,
+  message: n.message,
+  read: n.read,
+  createdAt: new Date(n._creationTime).toISOString(),
+  actionUrl: n.actionUrl,
+});
+
+const mapAuditLog = (al: any): AuditLog => ({
+  id: al._id,
+  userId: al.userId,
+  action: al.action,
+  entityType: al.entityType,
+  entityId: al.entityId,
+  changes: al.changes,
+  timestamp: new Date(al._creationTime).toISOString(),
+  ipAddress: al.ipAddress,
+});
+
+// Hydrate local state from Convex queries
+useEffect(() => {
+  if (qUsers) setUsers(qUsers.map(mapUser));
+}, [qUsers]);
+
+useEffect(() => {
+  if (qAttendanceSessions) setAttendanceSessions(qAttendanceSessions.map(mapSession));
+}, [qAttendanceSessions]);
+
+useEffect(() => {
+  if (qLeaveRequests) setLeaveRequests(qLeaveRequests.map(mapLeaveRequest));
+}, [qLeaveRequests]);
+
+useEffect(() => {
+  if (qLeaveBalances) setLeaveBalances(qLeaveBalances.map(mapLeaveBalance));
+}, [qLeaveBalances]);
+
+useEffect(() => {
+  if (qLeaveTypes) setLeaveTypes(qLeaveTypes.map(mapLeaveType));
+}, [qLeaveTypes]);
+
+useEffect(() => {
+  if (qProjects) setProjects(qProjects.map(mapProject));
+}, [qProjects]);
+
+useEffect(() => {
+  if (qTasks) setTasks(qTasks.map(mapTask));
+}, [qTasks]);
+
+useEffect(() => {
+  if (qTimeEntries) setTimeEntries(qTimeEntries.map(mapTimeEntry));
+}, [qTimeEntries]);
+
+useEffect(() => {
+  if (qNotifications) setNotifications(qNotifications.map(mapNotification));
+}, [qNotifications]);
+
+useEffect(() => {
+  if (qAuditLogs) setAuditLogs(qAuditLogs.map(mapAuditLog));
+}, [qAuditLogs]);
+
+useEffect(() => {
+  if (qSettings) setSettings(qSettings);
+}, [qSettings]);
+
+// Override user operations to use Convex
+const addUser = async (userData: Omit<User, 'id' | 'createdAt' | 'updatedAt'>) => {
+  const createdId = await mCreateUser({
+    email: userData.email,
+    password: userData.password,
+    name: userData.name,
+    role: userData.role as any,
+    avatar: userData.avatar,
+    department: userData.department,
+    position: userData.position,
+    isActive: userData.isActive,
+    faceEmbedding: userData.faceEmbedding,
+    locationOptIn: userData.locationOptIn,
+  });
+  // local hint for immediate UX
+  setUsers(prev => [...prev, { ...userData, id: createdId, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() } as User]);
+};
+
+const updateUser = async (id: string, updates: Partial<User>) => {
+  await mUpdateUser({ id: id as any, ...updates });
+  setUsers(prev => prev.map(u => u.id === id ? { ...u, ...updates, updatedAt: new Date().toISOString() } : u));
+};
+
+const deleteUser = async (id: string) => {
+  await mDeleteUser({ id: id as any });
+  setUsers(prev => prev.map(u => u.id === id ? { ...u, isActive: false } : u));
+};
+
+// Override attendance operations to use Convex
+const clockIn = async (userId: string, data: Partial<AttendanceSession>) => {
+  const newId = await mClockIn({
+    userId: userId as any,
+    deviceFingerprint: data.deviceFingerprint || 'web-browser',
+    ipAddress: data.ipAddress || '0.0.0.0',
+    location: data.location,
+    notes: data.notes,
+    faceVerified: data.faceVerified ?? false,
+    isRemote: data.isRemote ?? false,
+  });
+  setAttendanceSessions(prev => [...prev, {
+    id: newId,
+    userId,
+    clockIn: new Date().toISOString(),
+    deviceFingerprint: data.deviceFingerprint || 'web-browser',
+    ipAddress: data.ipAddress || '0.0.0.0',
+    location: data.location,
+    notes: data.notes,
+    faceVerified: data.faceVerified ?? false,
+    status: 'active',
+    isRemote: data.isRemote ?? false,
+  }]);
+};
+
+const clockOut = async (sessionId: string, data?: Partial<AttendanceSession>) => {
+  await mClockOut({ id: sessionId as any });
+  setAttendanceSessions(prev => prev.map(s => {
+    if (s.id === sessionId) {
+      const clockOut = new Date().toISOString();
+      const clockInTime = new Date(s.clockIn).getTime();
+      const clockOutTime = new Date(clockOut).getTime();
+      const totalHours = (clockOutTime - clockInTime) / (1000 * 60 * 60);
+      return { ...s, clockOut, totalHours: Math.round(totalHours * 100) / 100, status: 'completed', ...data };
+    }
+    return s;
+  }));
+};
+
+const updateSession = async (id: string, updates: Partial<AttendanceSession>) => {
+  await mUpdateSession({ id: id as any, ...updates });
+  setAttendanceSessions(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
+};
+
+// Override settings update to use Convex
+const updateSettings = async (updates: Partial<CompanySettings>) => {
+  await mUpdateSettings({
+    allowSelfRegistration: updates.allowSelfRegistration,
+    requireFaceVerification: updates.requireFaceVerification,
+    enableGeofencing: updates.enableGeofencing,
+    officeLocations: updates.officeLocations,
+    overtimeRules: updates.overtimeRules,
+    workingHoursPerDay: updates.workingHoursPerDay,
+    workingDaysPerWeek: updates.workingDaysPerWeek,
+  });
+  setSettings(prev => ({ ...prev, ...updates }));
+};
+*/

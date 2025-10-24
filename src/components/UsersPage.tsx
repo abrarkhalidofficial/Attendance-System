@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/useAuth';
 import { useData } from '../contexts/DataContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
@@ -13,10 +13,16 @@ import { Switch } from './ui/switch';
 import { toast } from 'sonner@2.0.3';
 import { Plus, Edit, UserX, UserCheck, Shield, User as UserIcon } from 'lucide-react';
 import { UserRole } from '../types';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from '../../convex/_generated/api';
 
 export const UsersPage: React.FC = () => {
   const { currentUser } = useAuth();
-  const { users, addUser, updateUser, deleteUser } = useData();
+  // const { users, addUser, updateUser, deleteUser } = useData();
+  const users = useQuery(api.users.getUsers) ?? [];
+  const createUser = useMutation(api.users.createUser);
+  const updateUserMutation = useMutation(api.users.updateUser);
+  const deleteUserMutation = useMutation(api.users.deleteUser);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -34,14 +40,33 @@ export const UsersPage: React.FC = () => {
     return <div>Access denied</div>;
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (editingUser) {
-      updateUser(editingUser, formData);
+      await updateUserMutation({
+        id: editingUser as any,
+        email: formData.email,
+        password: formData.password || undefined,
+        name: formData.name,
+        role: formData.role as any,
+        department: formData.department || undefined,
+        position: formData.position || undefined,
+        isActive: formData.isActive,
+        locationOptIn: formData.locationOptIn,
+      });
       toast.success('User updated!');
     } else {
-      addUser(formData);
+      await createUser({
+        email: formData.email,
+        password: formData.password,
+        name: formData.name,
+        role: formData.role as any,
+        department: formData.department || undefined,
+        position: formData.position || undefined,
+        isActive: formData.isActive,
+        locationOptIn: formData.locationOptIn,
+      });
       toast.success('User created!');
     }
 
@@ -64,11 +89,11 @@ export const UsersPage: React.FC = () => {
   };
 
   const handleEdit = (userId: string) => {
-    const user = users.find(u => u.id === userId);
+    const user = (users ?? []).find((u: any) => u._id === userId);
     if (user) {
       setFormData({
         email: user.email,
-        password: user.password,
+        password: '',
         name: user.name,
         role: user.role,
         department: user.department || '',
@@ -81,10 +106,10 @@ export const UsersPage: React.FC = () => {
     }
   };
 
-  const handleToggleActive = (userId: string) => {
-    const user = users.find(u => u.id === userId);
+  const handleToggleActive = async (userId: string) => {
+    const user = users.find(u => u._id === userId);
     if (user) {
-      updateUser(userId, { isActive: !user.isActive });
+      await updateUserMutation({ id: userId as any, isActive: !user.isActive });
       toast.success(user.isActive ? 'User deactivated' : 'User activated');
     }
   };
@@ -209,9 +234,9 @@ export const UsersPage: React.FC = () => {
             <UserIcon className="h-4 w-4 text-gray-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl">{users.length}</div>
+            <div className="text-2xl">{(users ?? []).length}</div>
             <p className="text-xs text-gray-500">
-              {users.filter(u => u.isActive).length} active
+              {(users ?? []).filter((u: any) => u.isActive).length} active
             </p>
           </CardContent>
         </Card>
@@ -242,9 +267,9 @@ export const UsersPage: React.FC = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {users.map((user) => (
+            {(users ?? []).map((user: any) => (
               <div
-                key={user.id}
+                key={user._id}
                 className="flex items-center justify-between p-4 border rounded-lg"
               >
                 <div className="flex items-center gap-4">
@@ -273,14 +298,14 @@ export const UsersPage: React.FC = () => {
                   <Button
                     size="sm"
                     variant="outline"
-                    onClick={() => handleEdit(user.id)}
+                    onClick={() => handleEdit(user._id)}
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
                   <Button
                     size="sm"
                     variant={user.isActive ? 'destructive' : 'default'}
-                    onClick={() => handleToggleActive(user.id)}
+                    onClick={() => handleToggleActive(user._id)}
                   >
                     {user.isActive ? (
                       <UserX className="h-4 w-4" />
